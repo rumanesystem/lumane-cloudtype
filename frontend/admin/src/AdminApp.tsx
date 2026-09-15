@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from 'react';
+import { OperationalHome } from './features/home/OperationalHome';
 import { LiveAdmin } from './features/live/LiveAdmin';
+import { QuoteWorkspace } from './features/quotes';
 import { MigrationPanel, WorkspaceShell, type WorkspaceArea } from './workspace/WorkspaceShell';
 
 export function AdminApp() {
@@ -11,9 +13,9 @@ export function AdminApp() {
   };
 
   return <WorkspaceShell active={area} onChange={openArea}>
-    <AreaPanel active={area === 'home'}>{visited.has('home') && <HomeArea onOpen={openArea} />}</AreaPanel>
-    <AreaPanel active={area === 'conversations'}>{visited.has('conversations') && <section aria-labelledby="conversation-title"><div className="workspace-page-heading"><div><p className="eyebrow">현재 연결된 고객 응대</p><h2 id="conversation-title">진행 중 상담</h2></div></div><LiveAdmin /></section>}</AreaPanel>
-    <AreaPanel active={area === 'quotes'}>{visited.has('quotes') && <MigrationPanel title="견적 업무" legacyLabel="견적 열기" legacyHref="/admin#quotes"><p>견적 검색·상태·담당자·상세 편집·출력·Excel 내보내기를 하나의 목록/상세 workspace로 이관합니다.</p><FeatureList items={['검색과 필터 상태 유지', '상담에서 견적 등록', '상세 편집과 이력 분리', '인쇄·Excel 내보내기']} /></MigrationPanel>}</AreaPanel>
+    <AreaPanel active={area === 'home'}>{visited.has('home') && <OperationalHome onOpen={openArea} />}</AreaPanel>
+    <AreaPanel active={area === 'conversations'}>{visited.has('conversations') && <section aria-labelledby="conversation-title"><div className="workspace-page-heading"><div><h2 id="conversation-title">상담 관리</h2><p>진행 중인 상담과 저장된 상담을 한곳에서 확인합니다.</p></div></div><LiveAdmin /></section>}</AreaPanel>
+    <AreaPanel active={area === 'quotes'}>{visited.has('quotes') && <section aria-labelledby="quotes-title"><div className="workspace-page-heading"><div><h2 id="quotes-title">견적 관리</h2><p>접수된 견적을 검색하고 세부 내용을 확인합니다.</p></div></div><QuoteWorkspace /></section>}</AreaPanel>
     <AreaPanel active={area === 'analytics'}>{visited.has('analytics') && <MigrationPanel title="운영 분석" legacyLabel="통계 열기" legacyHref="/admin#visitor-stats"><p>대시보드에 중복된 상담 통계와 방문자·유입 소스·토큰 비용을 한 영역으로 통합합니다.</p><FeatureList items={['방문·대화·견적 전환', '유입 소스 성과', '기간별 상담 추이', 'AI 토큰과 비용']} /></MigrationPanel>}</AreaPanel>
     <AreaPanel active={area === 'data'}>{visited.has('data') && <MigrationPanel title="데이터 관리" legacyLabel="휴지통·백업 열기" legacyHref="/admin#trash"><p>복원 가능한 삭제와 영구삭제, 전체/테이블 백업을 위험도에 맞는 확인 흐름으로 묶습니다.</p><FeatureList items={['휴지통 조회와 복원', '대상 확인 후 영구삭제', '전체 ZIP 백업', '테이블 CSV 내보내기']} /></MigrationPanel>}</AreaPanel>
   </WorkspaceShell>;
@@ -21,10 +23,6 @@ export function AdminApp() {
 
 function AreaPanel({ active, children }: { active: boolean; children: ReactNode }) {
   return <div hidden={!active}>{children}</div>;
-}
-
-function HomeArea({ onOpen }: { onOpen: (area: WorkspaceArea) => void }) {
-  return <section aria-labelledby="home-title"><div className="workspace-page-heading"><div><p className="eyebrow">오늘 처리할 업무</p><h2 id="home-title">운영 홈</h2></div></div><div className="work-queue"><button onClick={() => onOpen('conversations')}><strong>진행 중 상담</strong><span>현재 연결된 고객과 담당자 응대 확인</span></button><button onClick={() => onOpen('quotes')}><strong>견적 후속 업무</strong><span>접수 상태와 담당자별 작업 확인</span></button><button onClick={() => onOpen('data')}><strong>데이터 안전</strong><span>휴지통과 최근 백업 상태 확인</span></button></div><section className="workspace-note"><h3>재구성 기준</h3><p>대시보드의 중복 상담 목록과 상세 통계는 각 업무 영역으로 이동하고, 홈에는 지금 처리할 항목만 남깁니다.</p></section></section>;
 }
 
 function FeatureList({ items }: { items: string[] }) {

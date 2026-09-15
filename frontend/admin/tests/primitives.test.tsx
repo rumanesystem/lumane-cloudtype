@@ -226,12 +226,13 @@ describe('Feedback and layout', () => {
   });
 
   it('renders reusable navigation data with current-page semantics', () => {
-    render(<AppShell navigation={{ brand: { href: '/admin', label: '운영 도구' }, items: [{ href: '/inbox', label: '받은 상담', current: true }, { href: '/settings', label: '설정' }] }}><ListDetailLayout list={<ul><li>상담</li></ul>} detail={<h2>상세</h2>} /></AppShell>);
+    render(<AppShell navigation={{ brand: { href: '/admin', label: '운영 도구' }, items: [{ href: '/inbox', label: '받은 상담', current: true }, { href: '/settings', label: '설정' }] }}><ListDetailLayout ariaLabel="상담 목록과 상세" list={<ul><li>상담</li></ul>} detail={<h2>상세</h2>} /></AppShell>);
     expect(screen.getByRole('navigation', { name: '관리자 메뉴' })).toBeVisible();
     expect(screen.getByRole('link', { name: '운영 도구' })).toHaveAttribute('href', '/admin');
     expect(screen.getByRole('link', { name: '받은 상담' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: '설정' })).not.toHaveAttribute('aria-current');
     expect(screen.getByRole('main')).toBeVisible();
+    expect(screen.getByRole('region', { name: '상담 목록과 상세' })).toBeVisible();
     expect(screen.getByRole('article')).toBeVisible();
   });
 });

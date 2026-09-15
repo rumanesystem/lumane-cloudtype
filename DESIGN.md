@@ -1,10 +1,10 @@
 ---
 version: "alpha"
-name: Kate Blanc Warm Utility
+name: Kate Blanc Operational Neutral
 description: |
   케이트블랑 고객 상담과 관리자 운영 화면의 디자인 SOT.
-  샴페인 골드와 웜화이트의 브랜드 인상을 유지하면서 모바일 업무,
-  접근성, 명확한 상태 표현을 우선한다.
+  고객 화면은 브랜드의 따뜻함을 유지하되 관리자 화면은 중성 회색 기반의
+  조밀한 업무 UI로 구성하고 골드는 선택적 강조에만 사용한다.
 
 colors:
   primary: "#C9A96E"
@@ -13,15 +13,15 @@ colors:
   primary-soft: "#E8D9BC"
 
   surface: "#FFFFFF"
-  surface-warm: "#FAF9F7"
-  surface-subtle: "#F4F1EC"
+  surface-warm: "#F8F9FA"
+  surface-subtle: "#F1F3F5"
 
-  on-surface: "#2C2820"
-  on-surface-secondary: "#6B6056"
-  on-surface-muted: "#756B62"
+  on-surface: "#202124"
+  on-surface-secondary: "#4B5563"
+  on-surface-muted: "#6B7280"
 
-  outline: "#E4DDD2"
-  outline-strong: "#6B6056"
+  outline: "#E2E5E9"
+  outline-strong: "#6B7280"
 
   success: "#166534"
   success-container: "#DCFCE7"
@@ -29,7 +29,7 @@ colors:
   warning-container: "#FEF3C7"
   danger: "#B91C1C"
   danger-container: "#FEE2E2"
-  scrim: "rgba(44, 40, 32, 0.55)"
+  scrim: "rgba(32, 33, 36, 0.52)"
   transparent: "transparent"
 
 typography:
@@ -108,7 +108,7 @@ x-borders:
   accent-width: 3px
 
 x-shadows:
-  floating: 0 12px 36px rgba(44, 40, 32, 0.16)
+  floating: 0 12px 36px rgba(32, 33, 36, 0.12)
 
 x-motion:
   fast: 120ms
@@ -133,6 +133,14 @@ x-layout:
   toast-max: 360px
   tooltip-max: 240px
   split-columns: "minmax(260px, 0.78fr) minmax(0, 1.5fr)"
+  sidebar-width: 248px
+  sidebar-collapsed-width: 72px
+  workspace-columns: "var(--x-layout-sidebar-width) minmax(0, 1fr)"
+  workspace-collapsed-columns: "var(--x-layout-sidebar-collapsed-width) minmax(0, 1fr)"
+  workspace-nav-columns: "var(--spacing-xl) minmax(0, 1fr)"
+  workspace-footer-columns: "minmax(0, 1fr) var(--x-accessibility-target-min)"
+  work-queue-columns: "repeat(auto-fit, minmax(220px, 1fr))"
+  live-messages-reserved-space: 300px
   two-columns: "repeat(2, minmax(0, 1fr))"
   one-column: "1fr"
   page-inline-fluid: 3vw
@@ -231,13 +239,13 @@ components:
 
 ## Overview
 
-**Kate Blanc Warm Utility**는 고객에게는 차분하고 신뢰할 수 있는 상담 경험을,
+**Kate Blanc Operational Neutral**은 고객에게는 차분하고 신뢰할 수 있는 상담 경험을,
 관리자에게는 빠르고 명확한 업무 화면을 제공한다. 장식보다 정보 위계와 상태
 구분을 우선하며, 모바일에서도 데스크톱과 같은 핵심 결과를 낼 수 있어야 한다.
 
 기본 인상은 다음 세 단어로 정의한다.
 
-- **Warm:** 샴페인 골드와 웜화이트를 사용하되 과도하게 장식하지 않는다.
+- **Neutral:** 관리자 화면은 흰색과 중성 회색을 기본으로 하고 골드는 선택과 핵심 행동에 제한한다.
 - **Clear:** 현재 상태, 다음 행동, 오류 복구 방법을 한눈에 알 수 있게 한다.
 - **Operational:** 관리자 화면은 예쁜 대시보드보다 실제 상담 업무 완료를 우선한다.
 
@@ -253,7 +261,7 @@ components:
 
 ### 표면과 텍스트
 
-- 기본 페이지는 `surface-warm`, 카드와 dialog는 `surface`를 사용한다.
+- 기본 페이지는 중성 `surface-warm`, 카드와 dialog는 `surface`를 사용한다.
 - 본문은 `on-surface`, 설명은 `on-surface-secondary`를 사용한다.
 - `on-surface-muted`는 비필수 메타데이터에만 사용하며 작은 본문이나 필수 안내에
   사용하지 않는다.

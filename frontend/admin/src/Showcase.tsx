@@ -34,6 +34,7 @@ export function Showcase() {
       </header>
 
       <ListDetailLayout
+        ariaLabel="상담 목록과 상세"
         list={<><h2>최근 상담</h2><ul className="conversation-list">{conversations.map((item, index) => <li key={item.name}><button aria-pressed={index === 0} className={index === 0 ? 'is-selected' : ''}><span><strong>{item.name}</strong><small>{item.summary}</small>{index === 0 && <span className="conversation-list__selected">✓ 선택됨</span>}</span><time>{item.time}</time></button></li>)}</ul></>}
         detail={<><div className="detail-heading"><div><p className="eyebrow">상담 상세</p><h2>신규 고객</h2></div><span className="badge">AI 상담 중</span></div><dl className="detail-grid"><div><dt>연락처</dt><dd>010-••••-1234</dd></div><div><dt>설치 지역</dt><dd>서울시 마포구</dd></div></dl><div className="message"><strong>고객 메시지</strong><p>안방 드레스룸에 ㄱ자 형태로 설치하고 싶어요. 이번 주 실측이 가능할까요?</p></div><div className="detail-actions"><Button tone="primary">답장 작성</Button><Button>관리자 난입</Button><Button>첨부 확인</Button></div></>}
       />

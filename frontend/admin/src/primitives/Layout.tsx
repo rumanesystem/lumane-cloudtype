@@ -18,6 +18,6 @@ export function AppShell({ children, navigation }: { children: ReactNode; naviga
   return <div className="app-shell"><Navigation {...navigation} /><main id="overview">{children}</main></div>;
 }
 
-export function ListDetailLayout({ detail, list }: { detail: ReactNode; list: ReactNode }) {
-  return <section className="list-detail" aria-label="상담 목록과 상세"><div className="list-detail__list">{list}</div><article className="list-detail__detail">{detail}</article></section>;
+export function ListDetailLayout({ ariaLabel, detail, list }: { ariaLabel: string; detail: ReactNode; list: ReactNode }) {
+  return <section className="list-detail" aria-label={ariaLabel}><div className="list-detail__list">{list}</div><article className="list-detail__detail">{detail}</article></section>;
 }

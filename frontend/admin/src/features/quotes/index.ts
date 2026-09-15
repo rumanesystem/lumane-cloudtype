@@ -1,0 +1,1 @@
+export { QuoteWorkspace } from './QuoteWorkspace';

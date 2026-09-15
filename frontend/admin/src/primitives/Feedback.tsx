@@ -6,7 +6,7 @@ export function Feedback({ children, kind = 'status', onRetry, title }: { childr
     <section className={`feedback feedback--${kind}`} role={kind === 'error' ? 'alert' : 'status'}>
       <h3>{title}</h3>
       <div>{children}</div>
-      {onRetry && <Button onClick={onRetry}>다시 시도</Button>}
+      {onRetry && <Button type="button" onClick={onRetry}>다시 시도</Button>}
     </section>
   );
 }

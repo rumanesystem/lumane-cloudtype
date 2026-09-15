@@ -100,6 +100,26 @@ test('route wiring protects costly writes and uses narrow body limits', () => {
   assert.match(server, /MAX_ACTIVE_SESSIONS = 1000/);
 });
 
+test('quote list database failures remain observable to the admin client', () => {
+  const server = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  const route = server.slice(
+    server.indexOf("app.get('/api/quotes'"),
+    server.indexOf("app.patch('/api/quotes/:id'"),
+  );
+  assert.match(route, /res\.status\(500\)\.json\(\{ error: '견적 목록을 불러오지 못했습니다\.' \}\)/);
+  assert.doesNotMatch(route, /catch[\s\S]*res\.json\(\{ quotes: \[\] \}\)/);
+});
+
+test('saved conversation detail selects the test table only through an explicit query', () => {
+  const server = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  const route = server.slice(
+    server.indexOf("app.get('/api/admin/conversations/:id'"),
+    server.indexOf("// (삭제: /api/admin/conversations/:id/resend-notion"),
+  );
+  assert.match(route, /req\.query\.is_test === 'true' \? 'test_conversations' : 'conversations'/);
+  assert.match(route, /supabase\s*\.from\(table\)/);
+});
+
 test('legacy administrator bearer deployment contract is removed', () => {
   const root = path.join(__dirname, '..');
   for (const relativePath of [

@@ -2397,8 +2397,9 @@ app.delete('/api/admin/conversations/:id/purge', requireAdmin, async (req, res) 
 // ── 어드민: 저장된 상담 상세 (전체 메시지 포함) ─────────────
 app.get('/api/admin/conversations/:id', async (req, res) => {
   try {
+    const table = req.query.is_test === 'true' ? 'test_conversations' : 'conversations';
     const { data, error } = await supabase
-      .from('conversations')
+      .from(table)
       .select('*')
       .eq('id', req.params.id)
       .is('deleted_at', null)
@@ -2992,7 +2993,7 @@ app.get('/api/quotes', requireAdmin, async (_req, res) => {
     res.json({ quotes });
   } catch (err) {
     console.error('견적 목록 조회 오류:', err.message);
-    res.json({ quotes: [] });
+    res.status(500).json({ error: '견적 목록을 불러오지 못했습니다.' });
   }
 });
 
