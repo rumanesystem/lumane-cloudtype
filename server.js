@@ -616,12 +616,15 @@ async function upsertConversation(sess) {
     mode:            sess.mode || 'ai',  // #21: admin 모드 영속화 (마이그레이션 2026-05-15)
     // visitor_key는 값 있을 때만 포함 — NULL 덮어쓰기 방지 (재방문 추적용 영구 ID 보존)
     ...(sess.visitor_key ? { visitor_key: sess.visitor_key } : {}),
+    // 신규 고객 메시지가 들어온 경우에만 미확인으로 되돌림 (test_conversations에는 컬럼 없음)
+    ...(!sess.isTest && sess.uncheckedPending ? { is_checked: false } : {}),
   };
 
   try {
     await executeSupabase('conversation upsert', () =>
       supabase.from(table).upsert(payload, { onConflict: 'session_id' })
     );
+    if (payload.is_checked === false) sess.uncheckedPending = false;
   } catch (err) {
     console.error(`[FAIL_UPSERT] session=${sess.id} msgCount=${sess.messages.length} err=${err.message}`);
     throw err;
@@ -1261,6 +1264,7 @@ app.post('/api/chat', chatRateLimit, withSerializedSession(async (req, res) => {
       if (event) {
         const accepted = acceptClientEvent(sess, event);
         clientMessage = accepted.message;
+        if (accepted.isNew) sess.uncheckedPending = true;
         if (!accepted.isNew) {
           const priorReply = findReply(sess, event.id);
           if (priorReply) {
@@ -2736,29 +2740,49 @@ app.post('/api/admin/settings', async (req, res) => {
 });
 
 // ── 어드민: 읽음 카운트 조회 ──────────────────────────────────
+// conversations.is_checked 기반. 클라이언트 비교 기준에 맞춰 키별로 카운트를 돌려준다:
+//   conversations.id → message_count (저장 상담 카드)
+//   session_id       → 메모리 세션의 user 메시지 수 (실시간 세션 카드)
 app.get('/api/admin/seen-counts', async (_req, res) => {
   try {
     const { data, error } = await supabase
-      .from('admin_seen')
-      .select('session_id, last_seen_count');
+      .from('conversations')
+      .select('id, session_id, message_count')
+      .eq('is_checked', true)
+      .is('deleted_at', null);
     if (error) throw error;
     const map = {};
-    (data || []).forEach(r => { map[r.session_id] = r.last_seen_count; });
+    (data || []).forEach(r => {
+      map[String(r.id)] = r.message_count ?? 0;
+      const live = r.session_id && sessions.get(r.session_id);
+      if (live) map[r.session_id] = live.messages.filter(m => m.role === 'user').length;
+    });
     res.json({ counts: map });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ── 어드민: 읽음 카운트 저장 (upsert) ────────────────────────
+// ── 어드민: 읽음 처리 (conversations.is_checked = true) ───────
+// count는 관리자가 화면에서 본 메시지 수 — 그 사이 새 메시지가 왔으면 확인 처리하지 않는다.
 app.post('/api/admin/seen-counts', async (req, res) => {
   const { session_id, count } = req.body;
   if (!session_id || count === undefined) return res.status(400).json({ error: 'session_id, count 필요' });
+  const id = String(session_id);
+  const seenCount = Number(count);
+  if (!Number.isFinite(seenCount)) return res.status(400).json({ error: 'count는 숫자여야 합니다' });
   try {
-    const { error } = await supabase
-      .from('admin_seen')
-      .upsert({ session_id, last_seen_count: count, updated_at: new Date().toISOString() },
-               { onConflict: 'session_id' });
+    let query = supabase.from('conversations').update({ is_checked: true });
+    if (/^\d+$/.test(id)) {
+      query = query.eq('id', id).lte('message_count', seenCount);
+    } else {
+      const live = sessions.get(id);
+      if (live && live.messages.filter(m => m.role === 'user').length > seenCount) {
+        return res.json({ ok: true, skipped: true });
+      }
+      query = query.eq('session_id', id);
+    }
+    const { error } = await query;
     if (error) throw error;
     res.json({ ok: true });
   } catch (err) {

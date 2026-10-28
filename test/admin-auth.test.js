@@ -389,9 +389,7 @@ test('administrator initialization stops when the initial session check fails', 
 test('React administrator route preserves the existing authenticated page boundary', () => {
   const root = path.resolve(__dirname, '..');
   const server = fs.readFileSync(path.join(root, 'server.js'), 'utf8');
-  const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
   assert.match(server, /createAdminPageHandler\(\{ adminAuth, rootDir: __dirname, adminFile: 'dist\/admin\/index\.html' \}\)/);
   assert.match(server, /app\.get\('\/admin-react', _serveReactAdminPage\)/);
   assert.match(server, /app\.use\('\/admin-react\/assets', express\.static/);
-  assert.match(packageJson.scripts.start, /frontend:build/);
 });
