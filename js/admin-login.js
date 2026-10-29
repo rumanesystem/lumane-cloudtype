@@ -28,11 +28,13 @@ form.addEventListener('submit', async event => {
         password: form.elements.password.value,
       }),
     });
-    if (!response.ok) throw new Error('login failed');
+    if (!response.ok) throw new Error(response.status === 503 ? 'unavailable' : 'login failed');
     const destination = window.location.pathname.startsWith('/admin-react') ? '/admin-react' : `/admin${window.location.hash}`;
     window.location.replace(destination);
-  } catch {
-    error.textContent = '로그인할 수 없습니다. 이메일과 비밀번호를 확인해 주세요.';
+  } catch (failure) {
+    error.textContent = failure.message === 'unavailable'
+      ? '로그인 정보를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+      : '로그인할 수 없습니다. 이메일과 비밀번호를 확인해 주세요.';
     setLoading(false);
     form.elements.password.focus();
   }
