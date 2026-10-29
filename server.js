@@ -125,6 +125,9 @@ function notifySlack(event, emoji, body) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text }),
+  }).then(async r => {
+    // 슬랙이 거절하면(주소 무효·채널 보관 등) 이유를 남긴다 — 예전엔 조용히 넘어가 원인 파악이 안 됐음
+    if (!r.ok) console.error('[SLACK_NOTIFY_FAIL]', event, r.status, (await r.text().catch(() => '')).slice(0, 200));
   }).catch(e => console.error('[SLACK_NOTIFY_FAIL]', event, e.message));
 }
 
