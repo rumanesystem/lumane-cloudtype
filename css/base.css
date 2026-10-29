@@ -107,6 +107,7 @@ input, textarea, select { font-family: inherit; }
   background: var(--gold-dark); border-color: var(--gold-dark);
   transform: translateY(-2px); box-shadow: 0 4px 14px rgba(169,136,63,.35);
 }
+.btn-estimate { color: #1a1712; } /* 자동견적: 금색 바탕 위 글자를 진하게 */
 .btn-gold { background: var(--gold); color: var(--white); border-color: var(--gold); }
 .btn-gold:hover { background: var(--gold-dark); border-color: var(--gold-dark); transform: translateY(-2px); }
 .btn-ghost {
@@ -564,6 +565,7 @@ body > main, .site-main { padding-top: var(--header-h); }
 .floating-btn:hover { background: var(--gold-dark); transform: translateY(-3px) scale(1.04); box-shadow: 0 6px 26px rgba(169,136,63,.5); animation: none; }
 @keyframes floatAnim { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 .floating-insta { background: linear-gradient(45deg,#f09433,#dc2743,#bc1888); }
+.floating-quote { color: #1a1712; } /* 자동견적: 금색 바탕 위 글자를 진하게 */
 .floating-quote span { display: inline; }
 
 
