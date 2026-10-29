@@ -19,6 +19,10 @@ create table if not exists lumane.admin_sessions (
   created_at  timestamptz not null default now()
 );
 
+-- 서버(service_role)가 이 표를 읽고 쓸 권한 · lumane 스키마의 새 표는 자동으로 주어지지 않음.
+-- (10-29 운영에서 이 줄이 빠져 관리자 로그인이 "저장하지 못했습니다"로 막혔음 → 이 줄 실행으로 해결)
+grant select, insert, update, delete on lumane.admin_sessions to service_role;
+
 -- 서버는 secret key 로 접근하므로 RLS 를 켜도 동작함.
 -- 정책을 만들지 않아 공개 키(anon)로는 읽기·쓰기 모두 막힘.
 alter table lumane.admin_sessions enable row level security;
