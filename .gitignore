@@ -13,3 +13,4 @@ playwright-report/
 
 # 개인 메모리 파일
 .claude/memory/
+.ai-backups/
