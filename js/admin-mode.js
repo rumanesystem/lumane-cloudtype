@@ -89,13 +89,16 @@ async function saveConversationManual() {
  */
 async function takeoverSession() {
   if (!liveSelectedId) return;
+  const takeoverId = liveSelectedId;
   try {
     const res = await adminFetch(`${SERVER}/api/admin/takeover`, {
       method: 'POST',
       headers: adminHeaders(),
-      body: JSON.stringify({ sessionId: liveSelectedId }),
+      body: JSON.stringify({ sessionId: takeoverId }),
     });
     if (!res.ok) throw new Error();
+    // 난입하면 진행 중 대화로 취급 — 끝나면 다음 대화로 넘어가도록 (응답 기다리는 사이 다른 대화를 골랐으면 건드리지 않음)
+    if (String(liveSelectedId) === String(takeoverId)) setSelectedSavedConvId(null);
     showToast('👩‍💼 난입 완료! 고객에게 직접 메시지를 보내세요.', 'success');
     fetchLiveSessionMsgs();
   } catch {

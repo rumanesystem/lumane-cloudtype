@@ -155,6 +155,7 @@ async function deleteSavedConvFromDash(id, ev) {
     });
     if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || res.status); }
     setCachedConversations(_cachedConversations.filter(c => String(c.id) !== String(id)));
+    if (String(_selectedSavedConvId) === String(id)) { setSelectedSavedConvId(null); liveSelectedId = null; } // 보던 대화를 지웠으면 선택 해제
     renderDashboardSessions(_cachedLiveSessions);
     if (typeof showToast === 'function') showToast('상담 기록이 삭제됐습니다.', 'success');
   } catch (err) {

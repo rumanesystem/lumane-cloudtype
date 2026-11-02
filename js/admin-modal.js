@@ -119,6 +119,7 @@ function renderModalHistory(quote) {
     return;
   }
 
+  const historyAttachments = []; // [이미지]·[파일] 메시지는 글자 대신 그림·링크로
   document.getElementById('modalHistoryList').innerHTML = list.map((s, i) => {
     const dateStr  = s.시작일시 ? formatDate(s.시작일시, true) : '-';
     const uniqueId = `hs-${quote.id}-${i}`;
@@ -126,7 +127,7 @@ function renderModalHistory(quote) {
     const msgHtml = (s.메시지목록 || []).map(m => `
       <div class="ht-row ${m.role}">
         ${m.role === 'bot' ? '<div class="ht-av">👩‍💼</div>' : ''}
-        <div class="ht-bubble ${m.role}">${escAdmin(m.content)}</div>
+        <div class="ht-bubble ${m.role}">${(() => { const a = parseLiveAttachment(m.content); return a ? `<span data-ht-attachment-id="${historyAttachments.push(a) - 1}"></span>` : escAdmin(m.content); })()}</div>
       </div>
       <div class="ht-time ${m.role}">${m.time || ''}</div>
     `).join('');
@@ -153,6 +154,10 @@ function renderModalHistory(quote) {
       </div>
     `;
   }).join('');
+  const historyBox = document.getElementById('modalHistoryList');
+  historyAttachments.forEach((attachment, id) => {
+    historyBox.querySelector(`[data-ht-attachment-id="${id}"]`)?.replaceWith(createLiveAttachmentElement(attachment));
+  });
 }
 
 /**

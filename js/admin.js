@@ -990,7 +990,12 @@ async function openHistoryDetail(id) {
       ${구성내용 ? `<div style="margin-top:8px;"><span style="color:#9ca3af;font-size:11px;">예상 구성 </span><span style="font-size:12.5px;line-height:1.6;">${escAdmin(구성내용)}</span></div>` : ''}
       ${c.estimated_price ? `<div style="margin-top:8px;font-weight:700;color:#c9a96e;">예상 단가: ${fmt(c.estimated_price)}</div>` : ''}`;
     const msgs = c.messages || [];
+    const hdAttachments = []; // [이미지]·[파일] 메시지는 글자 대신 그림·링크로 (대화 탭과 같은 방식)
     document.getElementById('hdMsgs').innerHTML = msgs.map(m => {
+      const attachment = parseLiveAttachment(m.content);
+      const bodyHtml = attachment
+        ? `<span data-hd-attachment-id="${hdAttachments.push(attachment) - 1}"></span>`
+        : escAdmin(m.content || '');
       const isUser = m.role === 'user';
       const bg = isUser ? '#7c3aed' : '#fff';
       const color = isUser ? '#fff' : '#1a1a2e';
@@ -998,10 +1003,14 @@ async function openHistoryDetail(id) {
       const label = isUser ? '' : `<div style="font-size:11px;font-weight:700;margin-bottom:3px;color:#6b7280;">${m.fromAdmin ? '담당자' : '루마네'}</div>`;
       return `<div style="display:flex;justify-content:${align};">
         <div style="max-width:75%;">${label}
-          <div style="padding:9px 13px;border-radius:12px;background:${bg};color:${color};font-size:13.5px;line-height:1.6;word-break:break-word;white-space:pre-wrap;">${escAdmin(m.content || '')}</div>
+          <div style="padding:9px 13px;border-radius:12px;background:${bg};color:${color};font-size:13.5px;line-height:1.6;word-break:break-word;white-space:pre-wrap;">${bodyHtml}</div>
         </div>
       </div>`;
     }).join('');
+    const hdBox = document.getElementById('hdMsgs');
+    hdAttachments.forEach((attachment, id) => {
+      hdBox.querySelector(`[data-hd-attachment-id="${id}"]`)?.replaceWith(createLiveAttachmentElement(attachment));
+    });
   } catch {
     document.getElementById('hdTitle').textContent = '불러오기 실패';
   }

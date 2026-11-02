@@ -32,6 +32,7 @@ async function selectLiveSession(sessionId, byClick = false) {
   clearInterval(liveMsgPollTimer);
   liveMsgPollTimer = null;
   liveSelectedId = sessionId;
+  setSelectedSavedConvId(null); // 진행 중 대화로 옮기면 저장 대화 선택은 해제
   setLiveSelectedByClick(byClick);
   if (byClick) markSessionSeen(sessionId);
 

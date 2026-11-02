@@ -90,6 +90,7 @@ test('live selection does not schedule a message poller after its load receives 
       return intervals.length;
     },
     setLiveSelectedByClick() {},
+    setSelectedSavedConvId() {},
     window: { innerWidth: 1024 },
   });
   vm.runInContext(read('js/admin-live-messages.js'), context, { filename: 'js/admin-live-messages.js' });

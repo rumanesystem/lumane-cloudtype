@@ -138,7 +138,7 @@ async function fetchLiveSessions() {
     if (sessions.length > 0 && !liveSelectedId && !_selectedSavedConvId) {
       /* 아직 선택된 세션 없고 저장 상담도 안 보고 있으면 가장 최근 세션 자동 선택 */
       selectLiveSession(sessions[0].id);
-    } else if (liveSelectedId && !sessions.find(s => String(s.id) === String(liveSelectedId))) {
+    } else if (liveSelectedId && !_selectedSavedConvId && !sessions.find(s => String(s.id) === String(liveSelectedId))) {
       /* 선택했던 세션이 사라졌으면 다음 세션으로 전환 */
       liveSelectedId = null;
       if (sessions.length > 0) selectLiveSession(sessions[0].id);

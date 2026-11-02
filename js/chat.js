@@ -56,6 +56,7 @@ function _generateNickname() {
   const suffix = (SESSION_ID || '').slice(-3);
   const id = c + a + (suffix ? '-' + suffix : '');
   localStorage.setItem(NICKNAME_KEY, id);
+  localStorage.setItem(NICKNAME_KEY + '_세션', SESSION_ID || ''); // 어느 상담에서 만든 별명인지
   return id;
 }
 let userNickname = localStorage.getItem(NICKNAME_KEY) || '';
@@ -63,6 +64,16 @@ let userNickname = localStorage.getItem(NICKNAME_KEY) || '';
 if (userNickname && !/-[a-z0-9]{3}$/.test(userNickname)) {
   const matchesAuto = _NICK_COLORS.some(c => _NICK_ANIMALS.some(a => userNickname === c + a));
   if (matchesAuto) userNickname = _generateNickname();
+}
+// 자동 별명은 상담(세션)마다 새로 — 같은 브라우저에서 새 상담을 시작해도 관리자 화면 이름이 겹치지 않게
+// (직접 입력한 별명은 그대로 둠)
+function _currentNickname() {
+  const m = /^(.+)-([a-z0-9]{3})$/.exec(userNickname || '');
+  const isAuto = m && _NICK_COLORS.some(c => _NICK_ANIMALS.some(a => m[1] === c + a));
+  const madeFor = localStorage.getItem(NICKNAME_KEY + '_세션');
+  const stale = madeFor ? madeFor !== SESSION_ID : m && m[2] !== (SESSION_ID || '').slice(-3);
+  if (isAuto && stale) userNickname = _generateNickname();
+  return userNickname;
 }
 import { todayStr, esc } from './utils.js';
 import {
@@ -294,7 +305,7 @@ async function registerSessionWithHistory() {
     await fetch(`${SERVER}/api/session/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId: SESSION_ID, nickname: userNickname, isTest: IS_TEST, src: SRC, src2: SRC2, visitor_key: _getVisitorKey() }),
+      body: JSON.stringify({ sessionId: SESSION_ID, nickname: _currentNickname(), isTest: IS_TEST, src: SRC, src2: SRC2, visitor_key: _getVisitorKey() }),
     });
   } catch { /* 무시 */ }
 }
@@ -307,7 +318,7 @@ async function registerSession() {
     await fetch(`${SERVER}/api/session/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId: SESSION_ID, nickname: userNickname, isTest: IS_TEST, src: SRC, src2: SRC2, visitor_key: _getVisitorKey() }),
+      body: JSON.stringify({ sessionId: SESSION_ID, nickname: _currentNickname(), isTest: IS_TEST, src: SRC, src2: SRC2, visitor_key: _getVisitorKey() }),
     });
   } catch { /* 무시 */ }
 }
