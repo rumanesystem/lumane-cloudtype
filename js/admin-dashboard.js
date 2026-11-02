@@ -155,6 +155,7 @@ async function deleteSavedConvFromDash(id, ev) {
     });
     if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || res.status); }
     setCachedConversations(_cachedConversations.filter(c => String(c.id) !== String(id)));
+    removeConvFromPages(id);
     if (String(_selectedSavedConvId) === String(id)) { setSelectedSavedConvId(null); liveSelectedId = null; } // 보던 대화를 지웠으면 선택 해제
     renderDashboardSessions(_cachedLiveSessions);
     if (typeof showToast === 'function') showToast('상담 기록이 삭제됐습니다.', 'success');
@@ -213,6 +214,8 @@ async function fetchDashboardConversations() {
     if (!res.ok) return;
     const data = await res.json();
     setCachedConversations(data.conversations || []);
+    setConvTotal(data.total ?? (data.conversations || []).length);
+    refreshConvPages();
     _refreshDashBadge();
     _checkConvNotifications();
     renderDashboardSessions(_cachedLiveSessions);
@@ -272,7 +275,7 @@ function renderDashboardSessions(sessions) {
       } else if (convCard) {
         const convId = convCard.dataset.convId;
         // 저장 상담도 message_count 포함해서 저장 (0 저장 방지)
-        const conv = _cachedConversations.find(c => String(c.id) === String(convId));
+        const conv = findCachedConversation(convId);
         if (conv) _saveSeenCount(convId, conv.message_count ?? 0);
         markSessionSeen(convId);
         if (typeof openHistoryDetail === 'function') openHistoryDetail(convId);
@@ -327,7 +330,10 @@ function renderDashboardSessions(sessions) {
   }));
   // 활성 라이브 세션과 같은 session_id의 저장 상담은 중복 표시 방지
   const activeLiveSessionIds = new Set(sessions.filter(s => s.id).map(s => String(s.id)));
-  const convItems = _cachedConversations
+  // 미확인만 보기는 받아 둔 최신 목록 전체에서 · 평소에는 지금 페이지(30건)만
+  const pager = document.getElementById('dashPager');
+  if (pager) pager.style.display = _unreadOnlyMode ? 'none' : '';
+  const convItems = (_unreadOnlyMode ? _cachedConversations : convPageItems('dash'))
     .filter(c => c.id && !activeLiveSessionIds.has(String(c.session_id)))
     .map(c => ({
       type: 'saved', id: c.id,

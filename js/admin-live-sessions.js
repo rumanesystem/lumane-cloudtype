@@ -156,15 +156,15 @@ function renderLiveSessionList(sessions) {
   const countEl    = document.getElementById('liveCount');
   // 활성 라이브 세션과 같은 session_id의 저장 상담은 중복 표시 방지
   const activeLiveSessionIds = new Set(sessions.filter(s => s.id).map(s => String(s.id)));
-  const savedConvs = (_cachedConversations || [])
-    .filter(c => !activeLiveSessionIds.has(String(c.session_id)))
-    .slice(0, 50);
+  // 저장 상담은 페이지당 30건 (admin-pagination.js)
+  const savedConvs = convPageItems('live')
+    .filter(c => !activeLiveSessionIds.has(String(c.session_id)));
   const totalCount = sessions.length + savedConvs.length;
 
   if (dot) dot.style.background = sessions.length > 0 ? '#22c55e' : '#d1d5db';
   if (countEl) countEl.textContent = sessions.length > 0
     ? `${sessions.length}개 진행 중`
-    : `대화 ${savedConvs.length}개`;
+    : `대화 ${_convTotal}개`;
 
   if (totalCount === 0) {
     if (container) container.innerHTML = `
@@ -314,7 +314,7 @@ window.selectSavedConvInPanel = function(convId) {
 
   // _saveSeenCount 먼저 호출 — markSessionSeen에서 0 저장 제거 후 호출자 책임
   // String 변환 — c.id가 lumane schema에서 bigint(숫자)일 때 string convId와 매칭되도록
-  const conv = _cachedConversations.find(c => String(c.id) === String(convId));
+  const conv = findCachedConversation(convId);
   if (!conv) return;  // early return 먼저 — conv 없으면 이후 패널 렌더링 불가
   _saveSeenCount(String(convId), conv.message_count ?? 0);
   markSessionSeen(convId);
@@ -386,7 +386,9 @@ window.showRelatedSessions = function(visitorKey) {
     window.closeRelatedModal();
   }
   const live = (typeof _cachedLiveSessions !== 'undefined' ? _cachedLiveSessions : []).filter(s => s.visitor_key === visitorKey);
-  const saved = (typeof _cachedConversations !== 'undefined' ? _cachedConversations : []).filter(c => c.visitor_key === visitorKey);
+  // 최신 목록 + 넘겨 본 페이지에서 받아 둔 상담까지 (같은 상담은 한 번만)
+  const pool = [..._cachedConversations, ...(_convPages.dash.items || []), ...(_convPages.live.items || [])];
+  const saved = pool.filter((c, i) => c.visitor_key === visitorKey && pool.findIndex(x => String(x.id) === String(c.id)) === i);
   const total = live.length + saved.length;
   if (total === 0) return;
 

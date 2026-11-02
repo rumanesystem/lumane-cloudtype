@@ -33,6 +33,7 @@ const {
 const { insertIdempotentQuote } = require('./lib/quote-storage');
 const { runOptionalSync } = require('./lib/optional-sync');
 const { createAdminAuth, createAdminPageHandler } = require('./lib/admin-auth');
+const { parseConversationPage, mergeConversationPage, fetchConversationPage, DEFAULT_LIMIT } = require('./lib/admin-conversation-page');
 const {
   assertSafeExternalUrl,
   rateLimitKey,
@@ -2288,17 +2289,25 @@ app.post('/api/session/mark-read', withSerializedSession(async (req, res) => {
 // ── 어드민: 저장된 상담 목록 조회 ────────────────────────────
 app.get('/api/admin/conversations', async (req, res) => {
   try {
-    const [{ data: real, error: e1 }, { data: test, error: e2 }] = await Promise.all([
-      supabase.from('conversations').select('*').is('deleted_at', null).order('id', { ascending: false }).limit(200),
-      supabase.from('test_conversations').select('*').is('deleted_at', null).order('id', { ascending: false }).limit(200),
+    // ?page=N&pageSize=30 이면 그 페이지만 · 없으면 예전처럼 최신 200건 (+ 전체 개수 total)
+    const pageQuery = parseConversationPage(req.query);
+    if (pageQuery) {
+      // 페이지: id 만 훑어 그 페이지 30건을 고른 뒤 그 줄만 내용까지 (DB 한 번에 1000줄 한도 대비)
+      const { conversations, total } = await fetchConversationPage(supabase, pageQuery);
+      return res.json({ conversations, total, page: pageQuery.page, pageSize: pageQuery.size });
+    }
+    const list = table => supabase.from(table).select('*', { count: 'exact' }).is('deleted_at', null)
+      .order('id', { ascending: false }).limit(DEFAULT_LIMIT);
+    const [{ data: real, error: e1, count: c1 }, { data: test, error: e2, count: c2 }] = await Promise.all([
+      list('conversations'),
+      list('test_conversations'),
     ]);
     if (e1) throw e1;
     if (e2) throw e2;
-    const merged = [
-      ...(real || []),
-      ...(test || []).map(c => ({ ...c, is_test: true })),
-    ].sort((a, b) => b.id - a.id).slice(0, 200);
-    res.json({ conversations: merged });
+    res.json({
+      conversations: mergeConversationPage(real || [], test || [], null),
+      total: (c1 || 0) + (c2 || 0),
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
