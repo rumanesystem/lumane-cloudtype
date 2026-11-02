@@ -226,8 +226,13 @@ function saveTemplates() {
 
 /* ── 시간 포맷 유틸 ─────────────────────────────── */
 function timeSince(date) {
-  const diff = Math.floor((Date.now() - date) / 1000);
+  if (date == null || isNaN(new Date(date).getTime())) return '-'; // 시간 정보 없음
+  const diff = Math.floor((Date.now() - new Date(date)) / 1000);
+  if (diff < 0)    return '방금'; // 기기 시계가 조금 빠를 때
   if (diff < 60)   return diff + '초 전';
   if (diff < 3600) return Math.floor(diff / 60) + '분 전';
-  return Math.floor(diff / 3600) + '시간 전';
+  if (diff < 86400) return Math.floor(diff / 3600) + '시간 전';
+  // 24시간이 지나면 "11월 2일"처럼 날짜로 (몇백 시간 전은 알아보기 어려움)
+  const d = new Date(date);
+  return (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
 }
