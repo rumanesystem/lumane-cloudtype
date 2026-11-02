@@ -296,6 +296,7 @@ body > main, .site-main { padding-top: var(--header-h); }
   margin-bottom: 36px; font-weight: 400; letter-spacing: .06em;
   word-break: keep-all;
 }
+.hero-guide { margin: 0 0 14px; color: var(--white); font-size: 16px; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,.6); word-break: keep-all; } /* 자동견적 버튼 안내 한 줄 */
 .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
 .hero-scroll-hint {
   position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
