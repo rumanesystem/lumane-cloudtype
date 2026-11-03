@@ -31,6 +31,7 @@ const {
   recoverRuntimeState,
 } = require('./lib/session-recovery');
 const { insertIdempotentQuote } = require('./lib/quote-storage');
+const { createProductReply, getProductIntent, isProvisionalQuote, isQuoteText } = require('./lib/product-quote');
 const { runOptionalSync } = require('./lib/optional-sync');
 const { createAdminAuth, createAdminPageHandler } = require('./lib/admin-auth');
 const { parseConversationPage, mergeConversationPage, fetchConversationPage, DEFAULT_LIMIT } = require('./lib/admin-conversation-page');
@@ -396,13 +397,15 @@ function applyRecoveredConversation(sess, row, tokenRow, isTest = false) {
 
 async function reconcileRecoveredQuoteState(sess) {
   const quoteReply = [...sess.messages].reverse().find(message =>
-    message.role === 'assistant' && message.content &&
-    (message.content.includes('총 합계') || message.content.includes('견적서') || message.content.includes('주문내역'))
+    message.role === 'assistant' && isQuoteText(message.content)
   );
   if (!quoteReply || sess.isTest) return;
 
   const quoteNumber = 'KB-AI-' + sess.id.slice(-8).toUpperCase();
-  sess.lastQuoteReply = quoteReply.content;
+  sess.lastQuoteReply = getProductIntent(sess.messages) || isProvisionalQuote(quoteReply.content)
+    ? null : quoteReply.content;
+  // Restore record identity even for a pending preview, so returning to 1post
+  // updates its existing price instead of resetting the installation's status.
   let quoteRow;
   try {
     quoteRow = await executeSupabase('AI quote hydrate', () => supabase
@@ -465,6 +468,7 @@ async function ensureSessionHydrated(sessionId, isTest = false) {
 // (삭제: OPT_PRICES + calcEstimatedPrice — 호출처 0건, parseOrderSheet가 본문 텍스트에서 직접 가격 파싱)
 
 function parseOrderSheet(text) {
+  if (isProvisionalQuote(text)) return { estimated_price: null };
   const get = (re) => { const m = text.match(re); return m ? m[1].trim() : null; };
   const priceNum = (s) => s ? parseInt(s.replace(/,/g, '')) : null;
 
@@ -503,14 +507,19 @@ function parseOrderSheet(text) {
     shelf_color:     shelf_color || null,
     size_raw,
     options_text,
-    estimated_price: priceNum(get(/총\s*합계[:\s*]*([0-9,]+)원/)) || priceNum(get(/견적[:\s]+([0-9,]+)원/)) || priceNum(get(/할인\s*후\s*금액[:\s*]*([0-9,]+)원/)) || priceNum(get(/할인후\s*금액[:\s*]*([0-9,]+)원/)) || priceNum(get(/최종\s*금액[:\s*]*([0-9,]+)원/)),
+    estimated_price: priceNum(get(/최종\s*금액[:\s*]*([0-9,]+)원/)) || priceNum(get(/할인\s*후\s*금액[:\s*]*([0-9,]+)원/)) || priceNum(get(/총\s*합계[:\s*]*([0-9,]+)원/)) || priceNum(get(/견적[:\s]+([0-9,]+)원/)),
   };
 }
 
 // ── AI 견적 자동 등록 (주문서 출력 시 견적접수 테이블에 저장) ──
 async function autoRegisterQuote(sess, reply) {
   if (sess.isTest) return; // 테스트 세션은 견적 자동 등록 제외
-  if (!reply.includes('총 합계') && !reply.includes('견적서') && !reply.includes('주문내역')) return;
+  // New-product subtotals are incomplete commercial quotes, including on retries.
+  if (getProductIntent(sess.messages) || isProvisionalQuote(reply) || !isQuoteText(reply)) return;
+  const latestQuote = [...sess.messages].reverse().find(message =>
+    message.role === 'assistant' && isQuoteText(message.content));
+  // An old event can be retried after a later revision. Replay its response, not its price.
+  if (latestQuote && latestQuote.content !== reply) return;
   const parsed = parseOrderSheet(reply);
   if (!parsed.estimated_price) return;
 
@@ -575,7 +584,10 @@ async function autoRegisterQuote(sess, reply) {
         sess.customerInstallSaved = true;
         console.log(`✅ customer 스키마 저장 (AI상담): ${quoteNumber}`);
       } else {
-        console.log(`customer.install 이미 저장됨, 건너뜀 (AI상담): ${quoteNumber}`);
+        // A revised quote must update the amount without resetting status/ownership.
+        await executeSupabase('AI customer.install quote update', () => supabaseCustomer.from('install')
+          .update({ quote_amount: parsed.estimated_price, last_changed_at: now })
+          .eq('source_ref', quoteNumber));
       }
     }, custErr => {
       console.error('customer 스키마 저장 오류 (quotes는 저장됨):', custErr.message);
@@ -591,10 +603,9 @@ async function upsertConversation(sess) {
   const userMsgCount = sess.messages.filter(m => m.role === 'user').length;
   if (userMsgCount === 0) return;
   const orderMsg = [...sess.messages].reverse().find(m =>
-    m.role === 'assistant' && m.content &&
-    (m.content.includes('주문서') || m.content.includes('견적서') || m.content.includes('주문내역'))
+    m.role === 'assistant' && isQuoteText(m.content)
   );
-  const parsed = orderMsg ? parseOrderSheet(orderMsg.content) : {};
+  const parsed = orderMsg && !getProductIntent(sess.messages) ? parseOrderSheet(orderMsg.content) : {};
   const estimatedPrice = parsed.estimated_price || null;
 
   const table = sess.isTest ? 'test_conversations' : 'conversations';
@@ -1365,6 +1376,24 @@ app.post('/api/chat', chatRateLimit, withSerializedSession(async (req, res) => {
 
   // ── Haiku 사전 필터: 마지막 user 메시지만 검사 ──────────────
   const lastUserMsg = clientMessage;
+  const productReply = clientMessage ? createProductReply(messages) : null;
+  if (productReply && sessionId && sessions.has(sessionId)) {
+    const sess = sessions.get(sessionId);
+    const saved = appendServerMessage(sess, {
+      id: `ai_${clientMessage.id}`,
+      content: productReply.content,
+      quotePreview: productReply.quotePreview,
+      replyTo: clientMessage.id,
+    });
+    sess.lastQuoteReply = null;
+    sess.lastActivity = new Date();
+    try {
+      await upsertConversation(sess);
+      return res.json({ message: saved.content, messageId: saved.id });
+    } catch (error) {
+      return res.status(503).json({ error: '응답을 저장하지 못했습니다. 잠시 후 다시 시도해주세요.' });
+    }
+  }
   if (lastUserMsg) {
     const relevant = await isRelevantMessage(lastUserMsg.content);
     if (!relevant) {
@@ -1463,21 +1492,21 @@ app.post('/api/chat', chatRateLimit, withSerializedSession(async (req, res) => {
       }
 
       // 사용자 메시지에서 전화번호 추출 — 견적서 출력 후 고객이 연락처 입력 시
+      let phoneAdded = false;
       if (!sess.customerPhone && lastUserMsg) {
         const phoneMatch = lastUserMsg.content.match(/01[016789][-\s]?\d{3,4}[-\s]?\d{4}/);
         if (phoneMatch) {
           sess.customerPhone = phoneMatch[0];
-          // 이미 견적서가 출력된 세션이면 customer 스키마에 즉시 재등록
-          if (sess.lastQuoteReply) {
-            autoRegisterQuote(sess, sess.lastQuoteReply).catch(e =>
-              console.error('customer 재등록 실패:', e.message)
-            );
-          }
+          phoneAdded = true;
         }
       }
 
       await upsertConversation(sess);
       await autoRegisterQuote(sess, reply);
+      // Register the newest quote first; never race an old cached amount against it.
+      if (phoneAdded && sess.lastQuoteReply && sess.lastQuoteReply !== reply) {
+        await autoRegisterQuote(sess, sess.lastQuoteReply);
+      }
       res.json({ message: reply, messageId: savedReply.id });
       return;
     }
@@ -1622,6 +1651,10 @@ async function detectReturningCustomer(sess) {
     if (!data) { sess.isReturning = false; return; }
 
     sess.isReturning = true;
+    if (getProductIntent(sess.messages)) {
+      sess.previousQuoteSummary = null; // Do not attach an older 1post amount to a new product.
+      return;
+    }
 
     // 인젝션 방어: enum 화이트리스트 + 자유 텍스트 sanitize
     const LAYOUT_ENUM = new Set(['ㅡ자','일자','1자','ㄱ자','ㄷ자','ㅁ자','11자','11자형','코너','일자형','ㄱ자형','ㄷ자형','ㅁ자형']);

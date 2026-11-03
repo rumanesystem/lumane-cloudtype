@@ -838,6 +838,8 @@ export function setQuick(labels, isChoice = false) {
 
 /* ── AI 응답에서 퀵 버튼 자동 감지 ── */
 export function updateQuickFromText(text) {
+  // New-product previews use explicit inputs, not the legacy 1post option picker.
+  if (text.startsWith('[신규상품 예상안내]')) { setQuick([]); return; }
   /* 견적서 완료 텍스트면 퀵버튼 감지 스킵 */
   const isQuote = /\[설치\s*공간\]/.test(text) && /\[금액\]/.test(text);
   if (isQuote) { setQuick([]); return; }
