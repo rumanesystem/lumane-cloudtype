@@ -40,12 +40,18 @@ const _seenMsgCounts = {};
 function _getSeenSessions() {
   return new Set(Object.keys(_seenMsgCounts));
 }
+let _seenCountsLoading = false; // 불러오는 중 또 부르지 않기 (배지 재시도와 겹침 방지)
 async function _loadSeenCounts() {
+  if (_seenCountsLoading) return;
+  _seenCountsLoading = true;
   try {
     const res = await adminFetch('/api/admin/seen-counts', { headers: adminHeaders() });
     if (!res.ok) return;
     const { counts } = await res.json();
-    Object.assign(_seenMsgCounts, counts);
+    // 늦게 온 서버 값이 방금 읽은 값(더 큰 수)을 덮어쓰지 않게 큰 쪽 유지
+    for (const [id, n] of Object.entries(counts || {})) {
+      if (!(_seenMsgCounts[id] >= n)) _seenMsgCounts[id] = n;
+    }
     // 기존 localStorage 마이그레이션 (1회)
     const oldKey = 'lumane_seen_sessions';
     const oldRaw = localStorage.getItem(oldKey);
@@ -65,7 +71,7 @@ async function _loadSeenCounts() {
       renderDashboardSessions(_cachedLiveSessions, _cachedConversations);
     }
     _refreshDashBadge();
-  } catch {}
+  } catch {} finally { _seenCountsLoading = false; }
 }
 function _saveSeenCount(sessionId, count) {
   const id = String(sessionId);

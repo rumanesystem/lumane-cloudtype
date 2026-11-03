@@ -222,16 +222,25 @@ async function fetchDashboardConversations() {
   } catch { /* 무시 */ }
 }
 
+let _seenCountsLastTry = Date.now(); // 첫 불러오기(startBgPolling)와 겹치지 않게 페이지 열린 시각부터 셈
 function _refreshDashBadge() {
   // 책갈피(seen-counts) 로드 전에는 카운트 계산 보류 — 잘못된 미확인 표시 방지
-  if (!_seenCountsLoaded) return;
+  // 처음 불러오기가 실패했으면 10초마다 다시 불러옴 (성공하면 _loadSeenCounts 가 배지를 다시 그림)
+  if (!_seenCountsLoaded) {
+    if (Date.now() - _seenCountsLastTry > 10000) {
+      _seenCountsLastTry = Date.now();
+      _loadSeenCounts();
+    }
+    return;
+  }
   const seen    = _getSeenSessions();
-  const liveNew = _cachedLiveSessions.filter(s => {
+  const isLiveUnread = s => {
     if (!s.id) return false;
     if (!seen.has(String(s.id)) || _resetSessions.has(String(s.id))) return true;
     const lastSeen = _seenMsgCounts[String(s.id)];
     return lastSeen !== undefined && (s.messageCount ?? 0) > lastSeen;
-  }).length;
+  };
+  const liveNew = _cachedLiveSessions.filter(isLiveUnread).length;
   // 활성 라이브 세션과 같은 session_id의 저장 상담은 중복 카운트 방지
   const activeLive = new Set(_cachedLiveSessions.filter(s => s.id).map(s => String(s.id)));
   const convNew = _cachedConversations.filter(c => c.id && !seen.has(String(c.id)) && !activeLive.has(String(c.session_id))).length;
@@ -246,11 +255,12 @@ function _refreshDashBadge() {
   const statCard   = statUnread?.closest('.stats-card--unread');
   if (statUnread) statUnread.textContent = total;
   if (statCard)   statCard.classList.toggle('no-unread', total === 0);
+  // 대화 탭 배지 — 손님이 글을 쓴 진행 중 대화 중 아직 안 읽은 것만 (열어 보면 바로 사라짐)
   const liveBadge = document.getElementById('liveBadge');
   if (liveBadge) {
-    const activeCount = _cachedLiveSessions.filter(s => (s.messageCount ?? 0) > 0).length;
-    liveBadge.textContent = activeCount;
-    liveBadge.style.display = activeCount > 0 ? 'inline' : 'none';
+    const liveUnread = _cachedLiveSessions.filter(s => (s.messageCount ?? 0) > 0 && isLiveUnread(s)).length;
+    liveBadge.textContent = liveUnread;
+    liveBadge.style.display = liveUnread > 0 ? 'inline' : 'none';
   }
 }
 

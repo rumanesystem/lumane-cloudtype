@@ -87,6 +87,7 @@ async function fetchLiveSessionMsgs() {
     if (_liveSelectedByClick) {
       const sessData = _cachedLiveSessions.find(s => String(s.id) === String(liveSelectedId));
       if (sessData) _saveSeenCount(String(liveSelectedId), sessData.messageCount ?? 0);
+      _refreshDashBadge(); // 대화 탭 숫자 바로 지우기
     }
     renderLiveChatPanel(data.session);
   } catch { /* 무시 */ }

@@ -66,11 +66,8 @@ function startBgPolling() {
       const data = await res.json();
       const sessions = data.sessions || [];
       const count       = sessions.length;
-      const activeCount = sessions.filter(s => (s.messageCount ?? 0) > 0).length;
-      const unreadCount = sessions.filter(s => s.id && !_getSeenSessions().has(String(s.id))).length;
-      const badge   = document.getElementById('liveBadge');
       const countEl = document.getElementById('liveCount');
-      if (badge) { badge.style.display = activeCount > 0 ? 'inline' : 'none'; badge.textContent = activeCount; }
+      // 대화 탭 배지는 renderDashboardSessions → _refreshDashBadge 가 안 읽은 대화 기준으로 그림
       if (countEl) countEl.textContent  = count + '개 세션';
       // 대시보드도 업데이트
       _checkLiveNotifications(sessions);
@@ -174,14 +171,6 @@ function renderLiveSessionList(sessions) {
       </div>`;
     renderDashboardSessions(sessions);
     return;
-  }
-
-  // 라이브 탭 배지 (다른 탭에서 볼 때) — 실제로 채팅 시작한 세션만 카운트
-  const currentTab = document.querySelector('.tab-btn.active')?.id;
-  const activeSessions = sessions.filter(s => (s.messageCount ?? 0) > 0).length;
-  if (currentTab !== 'tab-live' && activeSessions > 0) {
-    const badge = document.getElementById('liveBadge');
-    if (badge) { badge.style.display = 'inline'; badge.textContent = activeSessions; }
   }
 
   if (!container) { renderDashboardSessions(sessions); return; }
