@@ -18,17 +18,21 @@ function harness() {
   const db = schema => ({ from: table => ({
     upsert: async payload => { writes.push({ schema, table, operation: 'upsert', payload }); return {}; },
     update: payload => ({ eq: async (key, value) => { writes.push({ schema, table, operation: 'update', payload, key, value }); return {}; } }),
-    select: () => ({ eq: () => ({ maybeSingle: async () => recoveredRows[`${schema}.${table}`] || null }) }),
+    select: () => ({ eq: (key, value) => ({ maybeSingle: async () => {
+      const row = recoveredRows[`${schema}.${table}`];
+      return row?.[key] === value ? row : null;
+    } }) }),
   }) });
   const context = vm.createContext({
     ...product,
+    crypto: require('node:crypto'),
     supabase: db('public'), supabaseCustomer: db('customer'),
     executeSupabase: async (_label, operation) => operation(), runOptionalSync,
     notifySlack: (...args) => notifications.push(args),
     console: { log() {}, warn() {}, error() {} },
   });
   vm.runInContext(source.slice(source.indexOf('function parseOrderSheet(text)'), source.indexOf('// ── 대화 종료 시 save_reason')), context);
-  vm.runInContext(source.slice(source.indexOf('async function reconcileRecoveredQuoteState(sess)'), source.indexOf('async function ensureSessionHydrated')), context);
+  vm.runInContext(source.slice(source.indexOf('async function resolveAIQuoteNumber(sess)'), source.indexOf('async function ensureSessionHydrated')), context);
   return { context, writes, notifications, recoveredRows };
 }
 const session = reply => ({ id: 'review_mock_12345678', messages: [{ role: 'user', content: '견적 문의' }, { role: 'assistant', content: reply }], startedAt: '2026-11-03T00:00:00Z' });
@@ -220,8 +224,9 @@ test('recovery during a provisional product keeps existing CRM identity for a la
     { role: 'user', content: '더도어 견적' },
     { role: 'assistant', content: '[신규상품 예상안내]\n최종금액 미확정' },
   ] });
-  h.recoveredRows['public.quotes'] = { quote_number: 'KB-AI-12345678' };
-  h.recoveredRows['customer.install'] = { source_ref: 'KB-AI-12345678' };
+  const number = 'KB-AI-' + require('node:crypto').createHash('sha256').update(h.sess.id).digest('hex').slice(0, 32).toUpperCase();
+  h.recoveredRows['public.quotes'] = { quote_number: number };
+  h.recoveredRows['customer.install'] = { source_ref: number };
   await h.context.reconcileRecoveredQuoteState(h.sess);
   assert.equal(h.sess.lastQuoteReply, null);
   assert.equal(h.sess.customerInstallSaved, true);

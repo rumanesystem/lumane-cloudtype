@@ -31,7 +31,7 @@ const {
   recoverRuntimeState,
 } = require('./lib/session-recovery');
 const { insertIdempotentQuote } = require('./lib/quote-storage');
-const { createProductReply, getProductIntent, isProvisionalQuote, isQuoteText } = require('./lib/product-quote');
+const { createProductReply, getProductIntent, getProductConversationPrompt, isProvisionalQuote, isQuoteText } = require('./lib/product-quote');
 const { runOptionalSync } = require('./lib/optional-sync');
 const { createAdminAuth, createAdminPageHandler } = require('./lib/admin-auth');
 const { parseConversationPage, mergeConversationPage, fetchConversationPage, DEFAULT_LIMIT } = require('./lib/admin-conversation-page');
@@ -395,19 +395,42 @@ function applyRecoveredConversation(sess, row, tokenRow, isTest = false) {
   return sess;
 }
 
+async function resolveAIQuoteNumber(sess) {
+  if (sess.aiQuoteNumber) return sess.aiQuoteNumber;
+  // The old last-eight-character key can belong to a different session.
+  // Use the complete session identity for new records; never guess ownership of
+  // an old short-key record or create a second record alongside it.
+  // Hash the full ID rather than exposing the browser's session capability.
+  const number = 'KB-AI-' + crypto.createHash('sha256').update(sess.id).digest('hex').slice(0, 32).toUpperCase();
+  const current = await executeSupabase('AI quote identity', () => supabase.from('quotes')
+    .select('quote_number').eq('quote_number', number).maybeSingle());
+  if (!current) {
+    const legacy = await executeSupabase('AI legacy quote identity', () => supabase.from('quotes')
+      .select('quote_number').eq('quote_number', 'KB-AI-' + sess.id.slice(-8).toUpperCase()).maybeSingle());
+    if (legacy) {
+      console.warn(`[AI_QUOTE_IDENTITY_REVIEW] session=${sess.id}`);
+      return null;
+    }
+  }
+  sess.aiQuoteNumber = number;
+  return number;
+}
+
 async function reconcileRecoveredQuoteState(sess) {
   const quoteReply = [...sess.messages].reverse().find(message =>
     message.role === 'assistant' && isQuoteText(message.content)
   );
   if (!quoteReply || sess.isTest) return;
 
-  const quoteNumber = 'KB-AI-' + sess.id.slice(-8).toUpperCase();
   sess.lastQuoteReply = getProductIntent(sess.messages) || isProvisionalQuote(quoteReply.content)
     ? null : quoteReply.content;
   // Restore record identity even for a pending preview, so returning to 1post
   // updates its existing price instead of resetting the installation's status.
   let quoteRow;
+  let quoteNumber;
   try {
+    quoteNumber = await resolveAIQuoteNumber(sess);
+    if (!quoteNumber) return;
     quoteRow = await executeSupabase('AI quote hydrate', () => supabase
       .from('quotes')
       .select('quote_number')
@@ -523,7 +546,13 @@ async function autoRegisterQuote(sess, reply) {
   const parsed = parseOrderSheet(reply);
   if (!parsed.estimated_price) return;
 
-  const quoteNumber = 'KB-AI-' + sess.id.slice(-8).toUpperCase();
+  const quoteNumber = await resolveAIQuoteNumber(sess);
+  if (!quoteNumber) {
+    const error = new Error('기존 견적의 세션 연결 확인이 필요합니다.');
+    error.name = 'SupabaseOperationError';
+    error.code = 'AI_QUOTE_IDENTITY_REVIEW';
+    throw error;
+  }
 
   const phone = parsed.phone || sess.customerPhone || '';
   const name  = parsed.customer_name || (sess.customerNameIsTemp ? '' : sess.customerName) || '';
@@ -613,7 +642,7 @@ async function upsertConversation(sess) {
     session_id:      sess.id,
     save_reason:     'realtime',
     customer_name:   parsed.customer_name || sess.customerName || null,
-    phone:           parsed.phone || null,
+    phone:           parsed.phone || sess.customerPhone || null,
     region:          parsed.region || null,
     size_raw:        parsed.size_raw || null,
     layout:          parsed.layout || null,
@@ -1447,7 +1476,9 @@ app.post('/api/chat', chatRateLimit, withSerializedSession(async (req, res) => {
     },
   ];
   const sessRef = sessionId && sessions.has(sessionId) ? sessions.get(sessionId) : null;
-  if (sessRef && sessRef.isReturning === true && sessRef.previousQuoteInjected !== true && sessRef.previousQuoteSummary) {
+  const productPrompt = getProductConversationPrompt(messages);
+  if (productPrompt) systemBlocks.push({ type: 'text', text: productPrompt });
+  if (!productPrompt && sessRef && sessRef.isReturning === true && sessRef.previousQuoteInjected !== true && sessRef.previousQuoteSummary) {
     systemBlocks.push({
       type: 'text',
       text: `\n[재방문 고객 컨텍스트]\n이 고객은 이전에 상담받은 이력이 있습니다. 직전 상담의 견적 요약은 다음과 같습니다:\n${sessRef.previousQuoteSummary}\n\n응대 시 주의:\n- 이 정보를 먼저 들이밀지 말 것. 고객이 직접 이전 상담 얘기를 꺼내거나 "지난번에..." 같은 단서를 줄 때만 자연스럽게 활용한다.\n- 이전 견적 금액·치수를 먼저 언급하지 말 것. 고객이 묻기 전까지는 모르는 척 진행한다.\n- 고객이 이전 상담을 분명히 언급하면 위 요약을 참고해서 구체적으로 안내한다.`,

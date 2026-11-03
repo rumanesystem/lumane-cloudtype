@@ -6,6 +6,24 @@ const api = require('../lib/product-quote');
 const user = content => ({ role: 'user', content });
 const quote = (length, options = []) => api.computeThedoor({ shape: 'ㅡ자', lengths: { A: length }, options });
 
+test('product description and general conversation do not enter the quotation parser', () => {
+  const description = api.createProductReply([user('더도어는 어떤 제품인가요?')]);
+  assert.equal(description.quotePreview.status, 'information');
+  assert.doesNotMatch(description.content, /형태와 면별 길이|전체 입력을 다시/);
+  assert.equal(api.createProductReply([user('더도어 견적'), user('아직 이사 전이라 천천히 알아볼게요')]), null);
+  assert.equal(api.createProductReply([user('팬트리'), user('고마워요')]), null);
+  assert.equal(api.createProductReply([user('팬트리와 더도어 비교'), user('고마워요')]), null);
+  assert.equal(api.createProductReply([user('2post는 어떤 제품인가요?')]).quotePreview.status, 'information');
+  assert.equal(api.createProductReply([user('더도어'), user('옵션은 어떤 것이 있나요?')]).quotePreview.status, 'information');
+  assert.match(api.createProductReply([user('더도어'), user('신규아파트 할인과 배송비는요?')]).content, /미확정/);
+  assert.equal(api.createProductReply([user('더도어'), user('측판만 추가해줘')]).quotePreview.status, 'needs_input');
+});
+
+test('new product conversational restrictions disappear on an explicit legacy switch', () => {
+  assert.match(api.getProductConversationPrompt([user('팬트리')]), /현재 상담 제품은 팬트리/);
+  assert.equal(api.getProductConversationPrompt([user('더도어'), user('1post로 바꿀게요')]), null);
+});
+
 test('the door uses the aggregate 150mm boundary and ten-ja minimum', () => {
   assert.equal(typeof api.computeThedoor, 'function');
   for (const [length, ja, amount] of [[1, 10, 1200000], [2999, 10, 1200000], [3149, 10, 1200000], [3150, 11, 1320000], [3151, 11, 1320000]]) {
