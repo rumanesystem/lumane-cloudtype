@@ -282,16 +282,18 @@ function extractSessionFields(messages) {
     // 금액(○○원) 숫자를 치수로 잘못 읽지 않게 빼고 읽음 (예: 할인 전 420,000원 → "000 × 378 × 000")
     const withoutWon = m => ({ ...m, content: String(m.content || '').replace(/\d[\d,]*\s*원/g, '') });
     const fromQuote = extractFieldsFromConversation([withoutWon(orderMsg)]);
-    // 더도어·팬트리 이야기가 마지막으로 나온 뒤의 대화만 기존 행거 칸 채우기에 씀
+    // 견적 이전에 더도어·팬트리 이야기가 마지막으로 나온 뒤부터 그 견적까지만 기존 행거 칸 채우기에 씀
     // ("더도어 말고 기존 행거로"처럼 기존 행거로 바꾸는 말이 있는 메시지는 경계로 보지 않음)
     const isNewProductTurn = m => {
       const c = String(m.content || '');
       if (c.startsWith('[신규상품 예상안내]')) return true;
       return /더\s*도어|팬트리|펜트리|2\s*post|투포스트/i.test(c) && !/기존|일반\s*행거|1\s*post|원포스트/i.test(c);
     };
+    // 범위는 선택된 견적 메시지까지 (견적 뒤에 나온 더도어 문의·치수는 이 견적과 무관)
+    const quoteIdx = msgs.lastIndexOf(orderMsg);
     let lastNewProduct = -1;
-    msgs.forEach((m, i) => { if (isNewProductTurn(m)) lastNewProduct = i; });
-    const legacyMsgs = msgs.slice(lastNewProduct + 1);
+    msgs.forEach((m, i) => { if (i < quoteIdx && isNewProductTurn(m)) lastNewProduct = i; });
+    const legacyMsgs = msgs.slice(lastNewProduct + 1, quoteIdx + 1);
     const fallback = extractFieldsFromConversation(legacyMsgs.map(withoutWon));
     for (const k of Object.keys(fromOrder)) {
       // 추가옵션은 견적 문장이 최종 구성이라 대화 전체에서 다시 찾지 않음 (거절한 옵션이 잡히는 것 방지)
