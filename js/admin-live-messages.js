@@ -266,7 +266,7 @@ function extractSessionFields(messages) {
     const 추가옵션 = optM
       ? optM[1].trim().replace(/\n/g, ' / ').slice(0, 200)
       : get(text, /(?:추가\s*옵션|옵션)[:\s]+([^\n]+)/);
-    return {
+    const fromOrder = {
       이름:       get(text, /성함[:\s]+([^\n]+)/),
       연락처:     get(text, /연락처[:\s]+([^\n]+)/),
       설치지역:   get(text, /(?:주소|설치\s*지역|지역)[:\s]+([^\n]+)/),
@@ -277,6 +277,14 @@ function extractSessionFields(messages) {
       선반색상:   get(text, /선반\s*색상[:\s]+([^\n]+)/),
       요청사항:   get(text, /요청\s*사항[:\s]+([^\n]+)/),
     };
+    // 한 문장 견적("총 합계 ○○원")은 항목 이름이 없어 비는 칸이 많음
+    // → 견적 문장 자체(손님이 최종으로 고른 구성)에서 먼저 찾고, 그래도 빈 칸만 대화 전체에서 채움
+    const fromQuote = extractFieldsFromConversation([orderMsg]);
+    const fallback = extractFieldsFromConversation(msgs);
+    for (const k of Object.keys(fromOrder)) {
+      if (fromOrder[k] == null) fromOrder[k] = fromQuote[k] ?? fallback[k] ?? null;
+    }
+    return fromOrder;
   }
 
   // 주문서 없음 → 대화 전체에서 베스트에포트 추출

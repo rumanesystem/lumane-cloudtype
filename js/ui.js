@@ -839,7 +839,8 @@ export function setQuick(labels, isChoice = false) {
 /* ── AI 응답에서 퀵 버튼 자동 감지 ── */
 export function updateQuickFromText(text) {
   /* 견적서 완료 텍스트면 퀵버튼 감지 스킵 */
-  const isQuote = /\[설치\s*공간\]/.test(text) && /\[금액\]/.test(text);
+  // 예전 칸 형식([설치 공간]·[금액]) 또는 지금 한 문장 형식("총 합계 ○○원")
+  const isQuote = (/\[설치\s*공간\]/.test(text) && /\[금액\]/.test(text)) || /총\s*합계\s*[0-9,]+\s*원/.test(text);
   if (isQuote) { setQuick([]); return; }
 
   /* ①②③ 스타일 선택지 자동 감지 */
