@@ -280,12 +280,12 @@ function extractSessionFields(messages) {
     // 한 문장 견적("총 합계 ○○원")은 항목 이름이 없어 비는 칸이 많음
     // → 견적 문장 자체(손님이 최종으로 고른 구성)에서 먼저 찾고, 그래도 빈 칸만 대화 전체에서 채움
     // 금액(○○원) 숫자를 치수로 잘못 읽지 않게 빼고 읽음 (예: 할인 전 420,000원 → "000 × 378 × 000")
-    const withoutWon = m => ({ ...m, content: String(m.content || '').replace(/d[d,]*s*원/g, '') });
+    const withoutWon = m => ({ ...m, content: String(m.content || '').replace(/\d[\d,]*\s*원/g, '') });
     const fromQuote = extractFieldsFromConversation([withoutWon(orderMsg)]);
     // 더도어·팬트리(신규 상품) 안내·문의 메시지는 기존 행거 칸 채우기에 쓰지 않음
     const legacyMsgs = msgs.filter(m => {
       const c = String(m.content || '');
-      return !c.startsWith('[신규상품 예상안내]') && !/더s*도어|팬트리|펜트리|2s*post|투포스트/i.test(c);
+      return !c.startsWith('[신규상품 예상안내]') && !/더\s*도어|팬트리|펜트리|2\s*post|투포스트/i.test(c);
     });
     const fallback = extractFieldsFromConversation(legacyMsgs.map(withoutWon));
     for (const k of Object.keys(fromOrder)) {
