@@ -1,0 +1,500 @@
+[
+  {
+    "label": "1post general",
+    "input": "1post 드레스룸이 궁금해요",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "드레스룸 상담을 도와드리겠습니다. 궁금한 내용을 말씀해 주세요. (로컬 모의 응답)",
+    "price": null,
+    "phone": null,
+    "preview": null,
+    "crm": [],
+    "quoteCount": 0,
+    "modelCalls": 1
+  },
+  {
+    "label": "1post quote",
+    "input": "1post 견적 010-0000-0000",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "가상고객 고객님\n견적서\n총 합계: 1,200,000원\n배송비: 30,000원 별도\n(금액 비교용 로컬 모의 응답; 운영 견적 아님)",
+    "price": 1200000,
+    "phone": "010-0000-0000",
+    "preview": null,
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1200000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 2
+  },
+  {
+    "label": "1post apartment discount",
+    "input": "신규아파트 견적",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "가상고객 고객님\n견적서\n총 합계: 1,200,000원\n할인 후 금액: 1,080,000원\n배송비: 30,000원 별도\n(금액 비교용 로컬 모의 응답; 운영 견적 아님)",
+    "price": 1080000,
+    "phone": "010-0000-0000",
+    "preview": null,
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1080000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 3
+  },
+  {
+    "label": "1post revision 1",
+    "input": "수정 신규아파트 견적",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "가상고객 고객님\n견적서\n총 합계: 1,350,000원\n할인 후 금액: 1,215,000원\n배송비: 30,000원 별도\n(금액 비교용 로컬 모의 응답; 운영 견적 아님)",
+    "price": 1215000,
+    "phone": "010-0000-0000",
+    "preview": null,
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1215000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 4
+  },
+  {
+    "label": "1post revision 2 final",
+    "input": "수정2 신규아파트 최종 견적",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "가상고객 고객님\n견적서\n총 합계: 1,500,000원\n할인 후 금액: 1,350,000원\n배송비: 30,000원 별도\n최종 금액: 1,380,000원\n(금액 비교용 로컬 모의 응답; 운영 견적 아님)",
+    "price": 1380000,
+    "phone": "010-0000-0000",
+    "preview": null,
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1380000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 5
+  },
+  {
+    "label": "thedoor description",
+    "input": "더도어는 어떤 제품인가요?",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "[신규상품 예상안내]\n더도어는 2post 제품이며 기본가에 일반문이 포함됩니다.\n기본가는 1자(300mm)당 120,000원, 최소 10자입니다. 합산 길이의 잔여 150mm부터 올림합니다.\n전용 옵션 단가: 1단서랍 100,000원 / 2단서랍 150,000원 / 추가선반 30,000원 / 코너추가선반 50,000원 / 측판 110,000원 / 이불반장 150,000원 / 이불긴장 300,000원 / 거울문 110,000원 / 유리문 110,000원\n거울문·유리문은 교체 짝당 추가금이며, 측판은 선택 수량만 추가합니다.\n배송·할인·VAT·시공 조건은 챗봇 채널 적용 기준 미확정으로 별도 확인이 필요합니다. 최종 결제금액이 아닙니다.\n예상금액 입력 안내가 필요하면 견적이라고 말씀해 주세요. 다른 궁금한 점도 편하게 질문해 주세요.",
+    "price": null,
+    "phone": "010-0000-0000",
+    "preview": {
+      "version": "chat-preview-2026-11-03",
+      "productType": "thedoor",
+      "status": "information",
+      "total": null
+    },
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1380000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 5
+  },
+  {
+    "label": "thedoor first quote",
+    "input": "더도어 ㄱ자; A=1575mm; B=1575mm; 옵션=2단서랍:1",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "[신규상품 예상안내]\n더도어(2post) 예상 안내\n형태: ㄱ자 / 치수: A=1575mm, B=1575mm\n합산 3150mm → 11자 (1자=300mm, 잔여 150mm부터 올림, 최소 10자)\n기본 예상금액: 1,320,000원 (일반문 포함)\n옵션: 2단서랍 1개 × 150,000원 = 150,000원\n옵션 예상금액: 150,000원\n기본·옵션 예상 소계: 1,470,000원\n길이 합산 예상금액만 안내하며, 실제 코너 시공 가능 여부와 도면은 담당자 확인이 필요합니다.\n배송·할인·VAT·시공 조건은 챗봇 채널 적용 기준 미확정으로 별도 확인이 필요합니다. 최종 결제금액이 아닙니다.\n변경 시 형태·모든 면의 mm·옵션(팬트리는 단수)을 한 메시지로 다시 보내 주세요. 기존 행거 상담은 1post라고 알려 주세요.",
+    "price": null,
+    "phone": "010-0000-0000",
+    "preview": {
+      "version": "chat-preview-2026-11-03",
+      "productType": "thedoor",
+      "status": "partial",
+      "total": null,
+      "totalLengthMm": 3150,
+      "ja": 11,
+      "baseAmount": 1320000,
+      "optionsAmount": 150000,
+      "knownSubtotal": 1470000,
+      "lines": [
+        {
+          "name": "2단서랍",
+          "quantity": 1,
+          "unitPrice": 150000,
+          "amount": 150000
+        }
+      ],
+      "input": {
+        "shape": "ㄱ자",
+        "lengths": {
+          "A": 1575,
+          "B": 1575
+        },
+        "options": [
+          {
+            "name": "2단서랍",
+            "quantity": 1
+          }
+        ]
+      }
+    },
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1380000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 5
+  },
+  {
+    "label": "thedoor option revision",
+    "input": "더도어 ㄱ자; A=1575mm; B=1575mm; 옵션=측판:2",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "[신규상품 예상안내]\n더도어(2post) 예상 안내\n형태: ㄱ자 / 치수: A=1575mm, B=1575mm\n합산 3150mm → 11자 (1자=300mm, 잔여 150mm부터 올림, 최소 10자)\n기본 예상금액: 1,320,000원 (일반문 포함)\n옵션: 측판 2개 × 110,000원 = 220,000원\n옵션 예상금액: 220,000원\n기본·옵션 예상 소계: 1,540,000원\n길이 합산 예상금액만 안내하며, 실제 코너 시공 가능 여부와 도면은 담당자 확인이 필요합니다.\n배송·할인·VAT·시공 조건은 챗봇 채널 적용 기준 미확정으로 별도 확인이 필요합니다. 최종 결제금액이 아닙니다.\n변경 시 형태·모든 면의 mm·옵션(팬트리는 단수)을 한 메시지로 다시 보내 주세요. 기존 행거 상담은 1post라고 알려 주세요.",
+    "price": null,
+    "phone": "010-0000-0000",
+    "preview": {
+      "version": "chat-preview-2026-11-03",
+      "productType": "thedoor",
+      "status": "partial",
+      "total": null,
+      "totalLengthMm": 3150,
+      "ja": 11,
+      "baseAmount": 1320000,
+      "optionsAmount": 220000,
+      "knownSubtotal": 1540000,
+      "lines": [
+        {
+          "name": "측판",
+          "quantity": 2,
+          "unitPrice": 110000,
+          "amount": 220000
+        }
+      ],
+      "input": {
+        "shape": "ㄱ자",
+        "lengths": {
+          "A": 1575,
+          "B": 1575
+        },
+        "options": [
+          {
+            "name": "측판",
+            "quantity": 2
+          }
+        ]
+      }
+    },
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1380000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 5
+  },
+  {
+    "label": "thedoor dimensions and remove option",
+    "input": "더도어 ㅡ자; A=3300mm; 옵션=없음",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "[신규상품 예상안내]\n더도어(2post) 예상 안내\n형태: ㅡ자 / 치수: A=3300mm\n합산 3300mm → 11자 (1자=300mm, 잔여 150mm부터 올림, 최소 10자)\n기본 예상금액: 1,320,000원 (일반문 포함)\n옵션 예상금액: 0원\n기본·옵션 예상 소계: 1,320,000원\n길이 합산 예상금액만 안내하며, 실제 코너 시공 가능 여부와 도면은 담당자 확인이 필요합니다.\n배송·할인·VAT·시공 조건은 챗봇 채널 적용 기준 미확정으로 별도 확인이 필요합니다. 최종 결제금액이 아닙니다.\n변경 시 형태·모든 면의 mm·옵션(팬트리는 단수)을 한 메시지로 다시 보내 주세요. 기존 행거 상담은 1post라고 알려 주세요.",
+    "price": null,
+    "phone": "010-0000-0000",
+    "preview": {
+      "version": "chat-preview-2026-11-03",
+      "productType": "thedoor",
+      "status": "partial",
+      "total": null,
+      "totalLengthMm": 3300,
+      "ja": 11,
+      "baseAmount": 1320000,
+      "optionsAmount": 0,
+      "knownSubtotal": 1320000,
+      "lines": [],
+      "input": {
+        "shape": "ㅡ자",
+        "lengths": {
+          "A": 3300
+        },
+        "options": []
+      }
+    },
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1380000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 5
+  },
+  {
+    "label": "thedoor general conversation",
+    "input": "아직 이사 전이라 천천히 알아볼게요",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "드레스룸 상담을 도와드리겠습니다. 궁금한 내용을 말씀해 주세요. (로컬 모의 응답)",
+    "price": null,
+    "phone": "010-0000-0000",
+    "preview": null,
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1380000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 6
+  },
+  {
+    "label": "thedoor unresolved policy",
+    "input": "신규아파트 할인과 배송비는요?",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "[신규상품 예상안내]\n더도어는 2post 제품이며 기본가에 일반문이 포함됩니다.\n기본가는 1자(300mm)당 120,000원, 최소 10자입니다. 합산 길이의 잔여 150mm부터 올림합니다.\n전용 옵션 단가: 1단서랍 100,000원 / 2단서랍 150,000원 / 추가선반 30,000원 / 코너추가선반 50,000원 / 측판 110,000원 / 이불반장 150,000원 / 이불긴장 300,000원 / 거울문 110,000원 / 유리문 110,000원\n거울문·유리문은 교체 짝당 추가금이며, 측판은 선택 수량만 추가합니다.\n배송·할인·VAT·시공 조건은 챗봇 채널 적용 기준 미확정으로 별도 확인이 필요합니다. 최종 결제금액이 아닙니다.\n예상금액 입력 안내가 필요하면 견적이라고 말씀해 주세요. 다른 궁금한 점도 편하게 질문해 주세요.",
+    "price": null,
+    "phone": "010-0000-0000",
+    "preview": {
+      "version": "chat-preview-2026-11-03",
+      "productType": "thedoor",
+      "status": "information",
+      "total": null
+    },
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1380000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 6
+  },
+  {
+    "label": "reload hydrate and revision",
+    "input": "ㅡ자; A=3600mm; 옵션=없음",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "[신규상품 예상안내]\n더도어(2post) 예상 안내\n형태: ㅡ자 / 치수: A=3600mm\n합산 3600mm → 12자 (1자=300mm, 잔여 150mm부터 올림, 최소 10자)\n기본 예상금액: 1,440,000원 (일반문 포함)\n옵션 예상금액: 0원\n기본·옵션 예상 소계: 1,440,000원\n길이 합산 예상금액만 안내하며, 실제 코너 시공 가능 여부와 도면은 담당자 확인이 필요합니다.\n배송·할인·VAT·시공 조건은 챗봇 채널 적용 기준 미확정으로 별도 확인이 필요합니다. 최종 결제금액이 아닙니다.\n변경 시 형태·모든 면의 mm·옵션(팬트리는 단수)을 한 메시지로 다시 보내 주세요. 기존 행거 상담은 1post라고 알려 주세요.",
+    "price": null,
+    "phone": "010-0000-0000",
+    "preview": {
+      "version": "chat-preview-2026-11-03",
+      "productType": "thedoor",
+      "status": "partial",
+      "total": null,
+      "totalLengthMm": 3600,
+      "ja": 12,
+      "baseAmount": 1440000,
+      "optionsAmount": 0,
+      "knownSubtotal": 1440000,
+      "lines": [],
+      "input": {
+        "shape": "ㅡ자",
+        "lengths": {
+          "A": 3600
+        },
+        "options": []
+      }
+    },
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1380000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 6
+  },
+  {
+    "label": "switch back to 1post",
+    "input": "1post 수정 견적",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "가상고객 고객님\n견적서\n총 합계: 1,350,000원\n배송비: 30,000원 별도\n(금액 비교용 로컬 모의 응답; 운영 견적 아님)",
+    "price": 1350000,
+    "phone": "010-0000-0000",
+    "preview": null,
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1350000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 7
+  },
+  {
+    "label": "pantry seven tiers",
+    "input": "팬트리 ㄱ자; A=1115mm; B=1235mm; 단수=7",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "[신규상품 예상안내]\n팬트리 입력 확인\n확인한 입력: ㄱ자 / A=1115mm, B=1235mm / 실제 7단\n팬트리는 일반·코너 선반 칸수 확인이 필요합니다. 현재 챗봇에서는 자동 칸수·총액 계산을 제공하지 않습니다. 입력 내용을 바탕으로 담당자에게 구성을 확인해 주세요.\n배송·할인·VAT·시공 조건은 챗봇 채널 적용 기준 미확정으로 별도 확인이 필요합니다. 최종 결제금액이 아닙니다.\n변경 시 형태·모든 면의 mm·옵션(팬트리는 단수)을 한 메시지로 다시 보내 주세요. 기존 행거 상담은 1post라고 알려 주세요.",
+    "price": null,
+    "phone": "010-0000-0000",
+    "preview": {
+      "version": "chat-preview-2026-11-03",
+      "productType": "pantry",
+      "status": "needs_layout",
+      "total": null,
+      "input": {
+        "shape": "ㄱ자",
+        "lengths": {
+          "A": 1115,
+          "B": 1235
+        },
+        "tiers": 7
+      }
+    },
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1350000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 7
+  },
+  {
+    "label": "pantry invalid tiers",
+    "input": "팬트리 ㄱ자; A=1115mm; B=1235mm; 단수=8",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "[신규상품 예상안내]\n팬트리 입력 확인\n팬트리 실제 단수는 2~7단의 정수로 입력해 주세요.\n예: 팬트리 ㄱ자; A=1115mm; B=1235mm; 단수=7\n팬트리는 실제 2~7단을 확인하며 자동 칸수·총액 계산은 아직 제공하지 않습니다.\n면 이름: ㅡ자=A, ㄱ자=A/B, ㄷ자=A/B/C, 11자=A/C, ㅁ자=A/B/C/D.\n배송·할인·VAT·시공 조건은 챗봇 채널 적용 기준 미확정으로 별도 확인이 필요합니다. 최종 결제금액이 아닙니다.\n변경 시 형태·모든 면의 mm·옵션(팬트리는 단수)을 한 메시지로 다시 보내 주세요. 기존 행거 상담은 1post라고 알려 주세요.",
+    "price": null,
+    "phone": "010-0000-0000",
+    "preview": {
+      "version": "chat-preview-2026-11-03",
+      "productType": "pantry",
+      "status": "needs_input",
+      "total": null
+    },
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1350000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 7
+  },
+  {
+    "label": "pantry general conversation",
+    "input": "고마워요",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "드레스룸 상담을 도와드리겠습니다. 궁금한 내용을 말씀해 주세요. (로컬 모의 응답)",
+    "price": null,
+    "phone": "010-0000-0000",
+    "preview": null,
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1350000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      }
+    ],
+    "quoteCount": 1,
+    "modelCalls": 8
+  },
+  {
+    "label": "mobile revisit after runtime reset",
+    "input": "팬트리 ㅡ자; A=2400mm; 단수=5",
+    "sessionId": "S-1793698689281-d98daad0b8fa4f248c1b30bb42884f99",
+    "response": "[신규상품 예상안내]\n팬트리 입력 확인\n확인한 입력: ㅡ자 / A=2400mm / 실제 5단\n팬트리는 일반·코너 선반 칸수 확인이 필요합니다. 현재 챗봇에서는 자동 칸수·총액 계산을 제공하지 않습니다. 입력 내용을 바탕으로 담당자에게 구성을 확인해 주세요.\n배송·할인·VAT·시공 조건은 챗봇 채널 적용 기준 미확정으로 별도 확인이 필요합니다. 최종 결제금액이 아닙니다.\n변경 시 형태·모든 면의 mm·옵션(팬트리는 단수)을 한 메시지로 다시 보내 주세요. 기존 행거 상담은 1post라고 알려 주세요.",
+    "price": null,
+    "phone": "010-0000-0000",
+    "preview": {
+      "version": "chat-preview-2026-11-03",
+      "productType": "pantry",
+      "status": "needs_layout",
+      "total": null,
+      "input": {
+        "shape": "ㅡ자",
+        "lengths": {
+          "A": 2400
+        },
+        "tiers": 5
+      }
+    },
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1350000,
+        "status": "접수"
+      }
+    ],
+    "quoteCount": 1,
+    "viewport": {
+      "width": 390,
+      "scrollWidth": 390
+    },
+    "resourceOrigins": [
+      "http://127.0.0.1:43191"
+    ]
+  },
+  {
+    "label": "second customer UI revision then concurrent old event HTTP retries",
+    "input": [
+      "1post 견적 010-0000-0001",
+      "수정2 견적"
+    ],
+    "sessionId": "S-1793698835101-59d5346a3dde4ae4999cc4ca902c73c4",
+    "response": "가상고객 고객님\n견적서\n총 합계: 1,500,000원\n배송비: 30,000원 별도\n(금액 비교용 로컬 모의 응답; 운영 견적 아님)",
+    "prices": [
+      null,
+      1500000
+    ],
+    "crm": [
+      {
+        "source_ref": "KB-AI-EBCC6EAA0E6114493F778EB94FBBDB3D",
+        "quote_amount": 1350000,
+        "status": "접수",
+        "phone": "010-0000-0000"
+      },
+      {
+        "source_ref": "KB-AI-E7BDEE94B9C20FAA8759C675F5433A84",
+        "quote_amount": 1500000,
+        "status": "접수",
+        "phone": "010-0000-0001"
+      }
+    ],
+    "quoteCount": 2,
+    "messageCountBefore": 5,
+    "messageCountAfter": 5,
+    "modelCallsBefore": 10,
+    "modelCallsAfter": 10,
+    "deduplicated": [
+      true,
+      true
+    ],
+    "resourceOrigins": [
+      "http://127.0.0.1:43191"
+    ]
+  }
+]
