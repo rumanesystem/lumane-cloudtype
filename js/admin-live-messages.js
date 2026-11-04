@@ -282,7 +282,8 @@ function extractSessionFields(messages) {
     const fromQuote = extractFieldsFromConversation([orderMsg]);
     const fallback = extractFieldsFromConversation(msgs);
     for (const k of Object.keys(fromOrder)) {
-      if (fromOrder[k] == null) fromOrder[k] = fromQuote[k] ?? fallback[k] ?? null;
+      // 추가옵션은 견적 문장이 최종 구성이라 대화 전체에서 다시 찾지 않음 (거절한 옵션이 잡히는 것 방지)
+      if (fromOrder[k] == null) fromOrder[k] = fromQuote[k] ?? (k === '추가옵션' ? null : fallback[k]) ?? null;
     }
     return fromOrder;
   }
