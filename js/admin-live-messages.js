@@ -282,10 +282,11 @@ function extractSessionFields(messages) {
     // 금액(○○원) 숫자를 치수로 잘못 읽지 않게 빼고 읽음 (예: 할인 전 420,000원 → "000 × 378 × 000")
     const withoutWon = m => ({ ...m, content: String(m.content || '').replace(/\d[\d,]*\s*원/g, '') });
     const fromQuote = extractFieldsFromConversation([withoutWon(orderMsg)]);
-    // 더도어·팬트리(신규 상품) 안내·문의 메시지는 기존 행거 칸 채우기에 쓰지 않음
+    // 더도어·팬트리 서버 안내와 정해진 형식의 견적 입력(A=…mm)은 기존 행거 칸 채우기에 쓰지 않음
     const legacyMsgs = msgs.filter(m => {
       const c = String(m.content || '');
-      return !c.startsWith('[신규상품 예상안내]') && !/더\s*도어|팬트리|펜트리|2\s*post|투포스트/i.test(c);
+      const strictNewProductInput = /^\s*(?:더\s*도어|팬트리|펜트리|2\s*post|투포스트)/i.test(c) && /[ABCD]\s*=\s*\d/i.test(c);
+      return !c.startsWith('[신규상품 예상안내]') && !strictNewProductInput;
     });
     const fallback = extractFieldsFromConversation(legacyMsgs.map(withoutWon));
     for (const k of Object.keys(fromOrder)) {
