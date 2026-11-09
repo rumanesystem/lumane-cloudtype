@@ -1579,7 +1579,7 @@ app.post('/api/chat', chatRateLimit, withSerializedSession(async (req, res) => {
     // 고객에게는 담당자 연결 안내 메시지 표시 — 세션당 최초 1회만
     const sess = sessionId && sessions.has(sessionId) ? sessions.get(sessionId) : null;
     if (sess && !sess.fallbackSent) {
-      const fallback = '잠시만요! 😊\n담당자를 연결해 드리겠습니다.\n곧 직접 안내해 드릴게요, 조금만 기다려 주세요 🙏';
+      const fallback = '죄송해요, 지금 AI 상담이 잠시 원활하지 않아요 🙏\n담당자에게 바로 알림을 보냈어요.\n기다리시기 어려우시면 위쪽 노란 카카오톡 상담 버튼을 눌러주시면 빠르게 도와드릴게요.';
       const savedFallback = appendServerMessage(sess, {
         id: `fallback_${clientMessage?.id || Date.now()}`,
         content: fallback,
