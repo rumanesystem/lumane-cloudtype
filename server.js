@@ -491,7 +491,7 @@ async function ensureSessionHydrated(sessionId, isTest = false) {
 // 손님용 복원(ensureSessionHydrated)과 달리 시간 제한 없음 · 저장된 대화가 없으면 null (빈 세션 안 만듦)
 async function loadSessionForAdmin(sessionId) {
   if (sessions.has(sessionId)) return sessions.get(sessionId);
-  if (typeof sessionId !== 'string' || !SESSION_ID_RE.test(sessionId)) return null;
+  if (typeof sessionId !== 'string' || !SESSION_ID_RE.test(sessionId) || isSessionBlocked(sessionId)) return null;
   for (const [table, isTest] of [['conversations', false], ['test_conversations', true]]) {
     const row = await executeSupabase('admin conversation hydrate', () => supabase
       .from(table)
@@ -502,6 +502,9 @@ async function loadSessionForAdmin(sessionId) {
     if (!row) continue;
     if (sessions.has(sessionId)) return sessions.get(sessionId);
     const tokenRow = await loadRecoveredTokenRow(sessionId);
+    // 불러오는 사이 관리자가 삭제했으면 되살리지 않음
+    if (isSessionBlocked(sessionId)) return null;
+    if (sessions.has(sessionId)) return sessions.get(sessionId);
     const sess = getOrCreateSession(sessionId);
     applyRecoveredConversation(sess, row, tokenRow, isTest);
     await reconcileRecoveredQuoteState(sess);
