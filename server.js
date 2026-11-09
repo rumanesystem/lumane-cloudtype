@@ -487,6 +487,30 @@ async function ensureSessionHydrated(sessionId, isTest = false) {
   }
 }
 
+// 관리자 난입·메시지용 — 메모리에 없으면(서버 재시작·30분 정리·저장된 대화 선택) DB 에 저장된 대화를 불러옴
+// 손님용 복원(ensureSessionHydrated)과 달리 시간 제한 없음 · 저장된 대화가 없으면 null (빈 세션 안 만듦)
+async function loadSessionForAdmin(sessionId) {
+  if (sessions.has(sessionId)) return sessions.get(sessionId);
+  if (typeof sessionId !== 'string' || !SESSION_ID_RE.test(sessionId)) return null;
+  for (const [table, isTest] of [['conversations', false], ['test_conversations', true]]) {
+    const row = await executeSupabase('admin conversation hydrate', () => supabase
+      .from(table)
+      .select('session_id, mode, messages, started_at, saved_at, customer_name, phone, src, src2, visitor_key')
+      .eq('session_id', sessionId)
+      .is('deleted_at', null)
+      .maybeSingle());
+    if (!row) continue;
+    if (sessions.has(sessionId)) return sessions.get(sessionId);
+    const tokenRow = await loadRecoveredTokenRow(sessionId);
+    const sess = getOrCreateSession(sessionId);
+    applyRecoveredConversation(sess, row, tokenRow, isTest);
+    await reconcileRecoveredQuoteState(sess);
+    console.log('🗂 관리자용 대화 불러옴: 세션 ' + sessionId + ' (' + table + ')');
+    return sess;
+  }
+  return null;
+}
+
 // ── 대화 내용 Supabase 저장 ─────────────────────────────────
 // (삭제: OPT_PRICES + calcEstimatedPrice — 호출처 0건, parseOrderSheet가 본문 텍스트에서 직접 가격 파싱)
 
@@ -2242,7 +2266,13 @@ app.post('/api/session/typing', (req, res) => {
 // ── 어드민: 난입 (AI → admin 모드 전환) ──────────────────────
 app.post('/api/admin/takeover', withSerializedSession(async (req, res) => {
   const { sessionId } = req.body;
-  const sess = sessions.get(sessionId);
+  let sess;
+  try {
+    sess = await loadSessionForAdmin(sessionId);
+  } catch (error) {
+    console.error(`[FAIL_TAKEOVER_LOAD] session=${sessionId} err=${error.message}`);
+    return res.status(503).json({ error: '대화를 불러오지 못했습니다.' });
+  }
   if (!sess) return res.status(404).json({ error: '세션 없음' });
 
   sess.mode = 'admin';
@@ -2287,7 +2317,13 @@ app.post('/api/admin/message', withSerializedSession(async (req, res) => {
   }
   const trimmed = message.slice(0, 2000);
 
-  const sess = sessions.get(sessionId);
+  let sess;
+  try {
+    sess = await loadSessionForAdmin(sessionId);
+  } catch (error) {
+    console.error(`[FAIL_ADMIN_MSG_LOAD] session=${sessionId} err=${error.message}`);
+    return res.status(503).json({ error: '대화를 불러오지 못했습니다.' });
+  }
   if (!sess) return res.status(404).json({ error: '세션 없음' });
 
   /* 읽음 추적용 mid + read 플래그. mid는 client mark-read 때 키로 사용 */
