@@ -39,6 +39,9 @@ async function selectLiveSession(sessionId, byClick = false) {
   // 라이브 세션은 conv_id 없음 → 메모 패널 숨김
   if (typeof window.lvHideMemoPanel === 'function') window.lvHideMemoPanel();
 
+  // 고르면 항상 새로 그림 (탭을 떠났다 돌아오면 상담원 모드 표시 등이 초기화돼 있으므로)
+  const msgsBox = document.getElementById('liveMsgs');
+  if (msgsBox) msgsBox.dataset.liveSig = '';
   await fetchLiveSessionMsgs();
 
   // await 동안 다른 세션이 선택됐으면 타이머 설정하지 않음 (stale 방지)
@@ -63,6 +66,7 @@ async function selectLiveSession(sessionId, byClick = false) {
     setTimeout(() => {
       const msgs = document.getElementById('liveMsgs');
       if (msgs) msgs.scrollTop = msgs.scrollHeight;
+      focusLiveInputOnce(sessionId, liveAdminMode);  // 채팅 화면이 보인 뒤에 커서
     }, 50);
   }
 }
@@ -667,11 +671,18 @@ function renderLiveChatPanel(sess) {
     ? '고객에게 직접 메시지를 입력하세요...'
     : '난입하기를 눌러야 입력 가능합니다';
 
-  const focusKey = isAdmin ? String(sess.id) : '';
-  if (isAdmin && _liveFocusKey !== focusKey) input.focus();
-  _liveFocusKey = focusKey;
+  focusLiveInputOnce(sess.id, isAdmin);
 }
 let _liveFocusKey = '';
+/* 상담원 모드 입력칸 커서 — 대화마다 처음 한 번만 (실제로 커서가 들어갔을 때만 기억 · 숨겨진 상태면 다음에 다시 시도) */
+function focusLiveInputOnce(sessionId, isAdmin) {
+  const input = document.getElementById('liveInput');
+  if (!isAdmin || !input) { _liveFocusKey = ''; return; }
+  const key = String(sessionId);
+  if (_liveFocusKey === key) return;
+  input.focus();
+  if (document.activeElement === input) _liveFocusKey = key;
+}
 
 function updateScrollBtn(show, previewText) {
   const btn = document.getElementById('scrollToBottomBtn');
