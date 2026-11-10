@@ -89,7 +89,12 @@ async function fetchLiveSessionMsgs() {
       if (sessData) _saveSeenCount(String(liveSelectedId), sessData.messageCount ?? 0);
       _refreshDashBadge(); // 대화 탭 숫자 바로 지우기
     }
+    // 1초마다 받아 오지만 내용이 그대로면 다시 그리지 않음 (클릭·글자 선택·마우스 표시가 끊기지 않게)
+    const msgsEl = document.getElementById('liveMsgs');
+    const sig = JSON.stringify([liveSelectedId, data.session, (window._liveTokenMap || {})[liveSelectedId] || null]);
+    if (msgsEl && msgsEl.dataset.liveSig === sig) return;
     renderLiveChatPanel(data.session);
+    if (msgsEl) msgsEl.dataset.liveSig = sig;
   } catch { /* 무시 */ }
 }
 
@@ -537,6 +542,7 @@ function renderLiveChatPanel(sess) {
 
   // wasAtBottom을 DOM 변경(renderLiveSummary) 전에 먼저 측정
   const msgs = document.getElementById('liveMsgs');
+  msgs.dataset.liveSig = '';
   const wasAtBottom = msgs.scrollTop + msgs.clientHeight >= msgs.scrollHeight - 30;
 
   renderLiveSummary(sess);
@@ -661,8 +667,11 @@ function renderLiveChatPanel(sess) {
     ? '고객에게 직접 메시지를 입력하세요...'
     : '난입하기를 눌러야 입력 가능합니다';
 
-  if (isAdmin) input.focus();
+  const focusKey = isAdmin ? String(sess.id) : '';
+  if (isAdmin && _liveFocusKey !== focusKey) input.focus();
+  _liveFocusKey = focusKey;
 }
+let _liveFocusKey = '';
 
 function updateScrollBtn(show, previewText) {
   const btn = document.getElementById('scrollToBottomBtn');

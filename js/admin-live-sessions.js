@@ -143,6 +143,13 @@ async function fetchLiveSessions() {
   } catch { /* 무시 */ }
 }
 
+/* 1초 폴링 — 목록 내용이 같으면 다시 그리지 않음 (클릭·마우스 표시가 끊기지 않게) */
+function setLiveListHtml(el, html) {
+  if (el._renderedHtml === html) return;
+  el.innerHTML = html;
+  el._renderedHtml = html;
+}
+
 /**
  * 세션 목록 렌더링
  */
@@ -164,11 +171,11 @@ function renderLiveSessionList(sessions) {
     : `대화 ${_convTotal}개`;
 
   if (totalCount === 0) {
-    if (container) container.innerHTML = `
+    if (container) setLiveListHtml(container, `
       <div style="text-align:center;padding:40px 16px;color:#9ca3af;font-size:13px;">
         <div style="font-size:32px;margin-bottom:12px;">💤</div>
         아직 대화가 없습니다
-      </div>`;
+      </div>`);
     renderDashboardSessions(sessions);
     return;
   }
@@ -275,7 +282,7 @@ function renderLiveSessionList(sessions) {
       </div>`;
   }).join('');
 
-  container.innerHTML = liveHtml + savedHtml;
+  setLiveListHtml(container, liveHtml + savedHtml);
 
   // 토큰 맵 갱신
   for (const s of sessions) {

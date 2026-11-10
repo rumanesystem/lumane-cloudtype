@@ -847,8 +847,9 @@ app.use((req, res, next) => {
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // ── 공개 HTML 파일 (확장자 유무 둘 다 지원) ──────────────────
+// no-cache = 보관은 하되 쓰기 전에 매번 서버에 "바뀌었나" 확인(ETag) → 업데이트는 즉시 반영 · 안 바뀐 파일은 다시 안 받음
 const _noCacheHtml = (res) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 };
@@ -879,7 +880,7 @@ app.get('/privacy.html', _serveHtml('privacy.html'));
 const _staticOpts = {
   setHeaders(res, filePath) {
     if (/\.(html|js|css)$/.test(filePath)) {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Cache-Control', 'no-cache');  // 매번 확인 · 안 바뀌면 304 (위 _noCacheHtml 설명)
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
     }
