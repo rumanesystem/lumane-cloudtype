@@ -95,7 +95,10 @@ async function fetchLiveSessionMsgs() {
     }
     // 1초마다 받아 오지만 내용이 그대로면 다시 그리지 않음 (클릭·글자 선택·마우스 표시가 끊기지 않게)
     const msgsEl = document.getElementById('liveMsgs');
-    const sig = JSON.stringify([liveSelectedId, data.session, (window._liveTokenMap || {})[liveSelectedId] || null]);
+    // 화면에 쓰는 값만 비교 (서버가 매번 새로 찍는 읽은 시각·마지막 활동 시각 등은 빼야 '안 바뀜'을 알아챔)
+    const ss = data.session || {};
+    const sig = JSON.stringify([liveSelectedId, ss.id, ss.mode, ss.customerName, ss.customerTyping, ss.startedAt, ss.messages,
+      (window._liveTokenMap || {})[liveSelectedId] || null]);
     if (msgsEl && msgsEl.dataset.liveSig === sig) return;
     renderLiveChatPanel(data.session);
     if (msgsEl) msgsEl.dataset.liveSig = sig;
