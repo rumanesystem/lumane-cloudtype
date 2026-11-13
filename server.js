@@ -1294,8 +1294,8 @@ async function buildApiMessages(messages) {
       ...prefix,
       ...recentMsgs,
     ];
-    // 연속 동일 role 제거 (Anthropic API 요구사항)
-    return built.filter((m, i) => i === 0 || m.role !== built[i - 1].role);
+    // 연속 동일 role 은 지우지 않음 — API 가 한 차례로 합쳐 줌 (지우면 사진 뒤 질문 · 연달아 보낸 말이 빠졌음)
+    return built;
   } catch (err) {
     console.warn('[buildApiMessages] 요약 실패, 슬라이딩 윈도우로 폴백:', err.message);
     return clean.slice(-MAX_API_MESSAGES);
@@ -1521,7 +1521,8 @@ app.post('/api/chat', chatRateLimit, withSerializedSession(async (req, res) => {
       response = await client.messages.create(request);
     } catch (imageErr) {
       // 사진을 못 읽는 경우(파일 삭제 등) — 사진을 글자로 바꿔 한 번만 다시 (답변이 끊기지 않게)
-      if (imageErr?.status !== 400 || !hasImageBlocks(apiMessages)) throw imageErr;
+      // 사진 때문인 400 일 때만 (다른 이유의 400 은 다시 물어도 똑같이 실패 → 사용량만 듦)
+      if (imageErr?.status !== 400 || !hasImageBlocks(apiMessages) || !/image|url|download|fetch|media/i.test(imageErr?.message || '')) throw imageErr;
       console.warn('[IMAGE_FALLBACK] session=' + String(sessionId).slice(0, 8) + ' err=' + imageErr.message);
       response = await client.messages.create({ ...request, messages: stripImageBlocks(apiMessages) });
     }
@@ -1624,7 +1625,9 @@ function customerImageUrl(message) {
   const base = typeof process !== 'undefined' && process.env.SUPABASE_URL;
   if (!m || !base) return null;
   const prefix = base.replace(/\/+$/, '') + '/storage/v1/object/public/lumane-uploads/';
-  return m[1].startsWith(prefix) && /\.(jpe?g|png|gif|webp)$/i.test(m[1]) ? m[1] : null;
+  // 업로드 때 만드는 파일 이름 모양(숫자13-영숫자5.확장자)만 — ../ · %2e 같은 경로 우회 차단
+  if (!m[1].startsWith(prefix)) return null;
+  return /^\d{13}-[a-z0-9]{5}\.(jpe?g|png|gif|webp)$/i.test(m[1].slice(prefix.length)) ? m[1] : null;
 }
 function attachCustomerImages(list) {
   const idx = [];
