@@ -1490,8 +1490,8 @@ app.post('/api/chat', chatRateLimit, withSerializedSession(async (req, res) => {
     return res.status(400).json({ error: '신규 event가 필요합니다.' });
   }
 
-  // ts/mid 등 extra 필드 제거 + 긴 대화 자동 요약
-  const apiMessages = await buildApiMessages(messages);
+  // ts/mid 등 extra 필드 제거 + 긴 대화 자동 요약 + 손님 사진은 AI가 직접 보게
+  const apiMessages = attachCustomerImages(await buildApiMessages(messages));
 
   // ── 재방문 고객 직전 견적 1회 주입 ─────────────────────────
   // 조건: 재방문 확정 + 직전 견적 요약 보유 + 아직 미주입
@@ -1515,12 +1515,16 @@ app.post('/api/chat', chatRateLimit, withSerializedSession(async (req, res) => {
   }
 
   try {
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      system: systemBlocks,
-      messages: apiMessages,
-    });
+    const request = { model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemBlocks, messages: apiMessages };
+    let response;
+    try {
+      response = await client.messages.create(request);
+    } catch (imageErr) {
+      // 사진을 못 읽는 경우(파일 삭제 등) — 사진을 글자로 바꿔 한 번만 다시 (답변이 끊기지 않게)
+      if (imageErr?.status !== 400 || !hasImageBlocks(apiMessages)) throw imageErr;
+      console.warn('[IMAGE_FALLBACK] session=' + String(sessionId).slice(0, 8) + ' err=' + imageErr.message);
+      response = await client.messages.create({ ...request, messages: stripImageBlocks(apiMessages) });
+    }
 
     const reply = response.content[0].text;
 
@@ -1608,6 +1612,39 @@ app.post('/api/chat', chatRateLimit, withSerializedSession(async (req, res) => {
     res.json({ message: '' });
   }
 }));
+
+// 손님이 올린 사진 ("[이미지]\n주소") → AI가 직접 보는 사진으로
+// 우리 저장소(lumane-uploads) 주소만 · 가장 최근 2장만 사진으로 (사용량 · 오래된 사진은 글자로만)
+const MAX_CUSTOMER_IMAGES = 2;
+const CUSTOMER_IMAGE_NOTE = '[손님이 보낸 사진]';
+const OLD_CUSTOMER_IMAGE_NOTE = '[손님이 앞에서 사진을 보냈음 · 지금은 사진을 다시 볼 수 없음]';
+function customerImageUrl(message) {
+  if (!message || message.role !== 'user' || typeof message.content !== 'string') return null;
+  const m = message.content.match(/^\[이미지\]\n(https:\/\/\S+)$/);
+  const base = typeof process !== 'undefined' && process.env.SUPABASE_URL;
+  if (!m || !base) return null;
+  const prefix = base.replace(/\/+$/, '') + '/storage/v1/object/public/lumane-uploads/';
+  return m[1].startsWith(prefix) && /\.(jpe?g|png|gif|webp)$/i.test(m[1]) ? m[1] : null;
+}
+function attachCustomerImages(list) {
+  const idx = [];
+  list.forEach((m, i) => { if (customerImageUrl(m)) idx.push(i); });
+  const recent = new Set(idx.slice(-MAX_CUSTOMER_IMAGES));
+  return list.map((m, i) => {
+    const url = customerImageUrl(m);
+    if (!url) return m;
+    if (!recent.has(i)) return { role: 'user', content: OLD_CUSTOMER_IMAGE_NOTE };
+    return { role: 'user', content: [{ type: 'image', source: { type: 'url', url } }, { type: 'text', text: CUSTOMER_IMAGE_NOTE }] };
+  });
+}
+function hasImageBlocks(list) {
+  return list.some(m => Array.isArray(m.content) && m.content.some(b => b && b.type === 'image'));
+}
+function stripImageBlocks(list) {
+  return list.map(m => Array.isArray(m.content) && m.content.some(b => b && b.type === 'image')
+    ? { role: m.role, content: OLD_CUSTOMER_IMAGE_NOTE }
+    : m);
+}
 
 // ── 세션 등록 API ─────────────────────────────────────────────
 app.post('/api/session/register', sessionRegisterRateLimit, withSerializedSession(async (req, res) => {
