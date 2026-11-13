@@ -1617,6 +1617,7 @@ app.post('/api/chat', chatRateLimit, withSerializedSession(async (req, res) => {
 // 손님이 올린 사진 ("[이미지]\n주소") → AI가 직접 보는 사진으로
 // 우리 저장소(lumane-uploads) 주소만 · 가장 최근 2장만 사진으로 (사용량 · 오래된 사진은 글자로만)
 const MAX_CUSTOMER_IMAGES = 2;
+const CUSTOMER_IMAGE_WINDOW = 8;  // 최근 메시지 8개 안의 사진만 (그 뒤는 AI가 앞서 읽고 답한 내용으로 이어 감 · 매 답변 재전송 사용량 줄임)
 const CUSTOMER_IMAGE_NOTE = '[손님이 보낸 사진]';
 const OLD_CUSTOMER_IMAGE_NOTE = '[손님이 앞에서 사진을 보냈음 · 지금은 사진을 다시 볼 수 없음]';
 function customerImageUrl(message) {
@@ -1631,7 +1632,7 @@ function customerImageUrl(message) {
 }
 function attachCustomerImages(list) {
   const idx = [];
-  list.forEach((m, i) => { if (customerImageUrl(m)) idx.push(i); });
+  list.forEach((m, i) => { if (customerImageUrl(m) && i >= list.length - CUSTOMER_IMAGE_WINDOW) idx.push(i); });
   const recent = new Set(idx.slice(-MAX_CUSTOMER_IMAGES));
   return list.map((m, i) => {
     const url = customerImageUrl(m);
