@@ -271,7 +271,42 @@ function renderDashboardSessions(sessions) {
   // 이벤트 위임 — 최초 1회만 등록
   if (!container._clickInited) {
     container._clickInited = true;
+    // 카드는 5초마다 다시 그려짐("N초 전") — 누르는 사이 다시 그려지면 브라우저가 클릭을 버림(두 번 눌러야 열리던 원인)
+    // → 같은 카드(같은 상담 번호)에서 눌렀다 떼면 클릭으로 처리 · 같은 카드 0.6초 안 반복은 한 번만
+    const cardKey = el => {
+      const s = el && el.closest && el.closest('[data-session-id]');
+      if (s) return 's:' + s.dataset.sessionId;
+      const c = el && el.closest && el.closest('[data-conv-id]');
+      return c ? 'c:' + c.dataset.convId : '';
+    };
+    // 카드 안의 작은 버튼(이름 수정·삭제 등)은 카드 열기에서 뺌 (카드 바깥 조상은 보지 않음)
+    const onControl = el => { const c = el && el.closest && el.closest('button,[onclick],a,input'); return !!c && container.contains(c); };
+    let pressKey = '';
+    let lastOpen = { key: '', at: 0 };
+    const openCard = (e, key) => {
+      if (!key) return;
+      const now = Date.now();
+      if (lastOpen.key === key && now - lastOpen.at < 600) return;
+      lastOpen = { key, at: now };
+      handleCardOpen(e);
+    };
+    container.addEventListener('pointerdown', e => {
+      if (e.button !== 0 || onControl(e.target)) { pressKey = ''; return; }
+      pressKey = cardKey(e.target);
+    });
+    container.addEventListener('pointerup', e => {
+      const key = cardKey(e.target);
+      const pressed = pressKey;
+      pressKey = '';
+      // 정상 클릭은 click 이벤트가 처리 · 누른 사이 다시 그려져 click 이 안 오는 경우만 여기서 처리
+      if (!key || key !== pressed) return;
+      setTimeout(() => openCard(e, key), 0);
+    });
     container.addEventListener('click', e => {
+      if (onControl(e.target)) return;
+      openCard(e, cardKey(e.target));
+    });
+    function handleCardOpen(e) {
       const sessionCard = e.target.closest('[data-session-id]');
       const convCard    = e.target.closest('[data-conv-id]');
       if (sessionCard) {
@@ -290,7 +325,7 @@ function renderDashboardSessions(sessions) {
         markSessionSeen(convId);
         if (typeof openHistoryDetail === 'function') openHistoryDetail(convId);
       }
-    });
+    }
     container.addEventListener('mouseenter', e => {
       const card = e.target.closest('[data-session-id],[data-conv-id]');
       if (card) card.style.boxShadow = '0 4px 16px rgba(0,0,0,.1)';
