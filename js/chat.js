@@ -930,7 +930,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   nicknameBtn.addEventListener('click', startChatWithNickname);
   nicknameInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') startChatWithNickname();
+    if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) startChatWithNickname();  // 한글 조합 중 Enter 는 글자 확정용
   });
   nicknameInput.addEventListener('input', () => { nicknameError.textContent = ''; });
 

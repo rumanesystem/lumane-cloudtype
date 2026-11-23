@@ -77,6 +77,8 @@ export function initInputListeners(onSend) {
     refreshSendBtn();
   });
   $inp.addEventListener('keydown', e => {
+    // 한글 조합 중 Enter 는 글자 확정용 — 보내면 마지막 글자가 따로 한 번 더 감 (크롬 isComposing · 사파리 keyCode 229)
+    if (e.isComposing || e.keyCode === 229) return;
     if (e.key === 'Enter') {
       if (e.shiftKey) {
         /* Shift+Enter → 줄바꿈 */

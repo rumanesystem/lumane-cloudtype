@@ -347,7 +347,7 @@
             <div style="padding:10px 12px;border-top:1px solid #fde68a;display:flex;gap:6px;background:#fffdf2;">
               <textarea id="lvMemoInput" placeholder="메모 작성... (Shift+Enter 줄바꿈)" rows="2"
                 style="flex:1;resize:none;min-height:48px;max-height:120px;border:1px solid #fde047;border-radius:8px;padding:6px 9px;font-size:12px;line-height:1.4;outline:none;font-family:inherit;box-sizing:border-box;background:#fff;"
-                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();window.lvAddMemo&&window.lvAddMemo();}"></textarea>
+                onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing&&event.keyCode!==229){event.preventDefault();window.lvAddMemo&&window.lvAddMemo();}"></textarea>
               <button onclick="window.lvAddMemo&&window.lvAddMemo()" style="background:#ca8a04;color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:11.5px;cursor:pointer;white-space:nowrap;flex-shrink:0;align-self:flex-end;height:36px;">+ 추가</button>
             </div>
           </div>
@@ -385,7 +385,7 @@
             placeholder="세션을 선택하고 난입하기를 눌러야 입력 가능합니다"
             disabled
             style="flex:1;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:20px;font-size:14.5px;outline:none;transition:border-color .2s,background .2s;font-family:inherit;background:#f3f4f6;"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdminMsg();}"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing&&event.keyCode!==229){event.preventDefault();sendAdminMsg();}"
             onfocus="this.style.borderColor='#7c3aed';this.style.background='#fff';"
             onblur="this.style.borderColor='#e5e7eb';this.style.background='#f3f4f6';"
           />
@@ -636,7 +636,7 @@
           <div style="display:flex;gap:6px;">
             <textarea id="hdMemoInput" placeholder="메모 작성... (Shift+Enter 줄바꿈)" rows="2"
               style="flex:1;resize:vertical;min-height:36px;border:1px solid #fde047;border-radius:8px;padding:7px 10px;font-size:12.5px;line-height:1.4;outline:none;font-family:inherit;box-sizing:border-box;background:#fff;"
-              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();window.hdAddMemo&&window.hdAddMemo();}"></textarea>
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing&&event.keyCode!==229){event.preventDefault();window.hdAddMemo&&window.hdAddMemo();}"></textarea>
             <button onclick="window.hdAddMemo&&window.hdAddMemo()" style="background:#ca8a04;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0;">+ 추가</button>
           </div>
         </div>
@@ -646,7 +646,7 @@
       <div id="hdReplyArea" style="display:none;flex-direction:column;padding:12px 16px;border-top:1px solid #e5e7eb;background:#fff;gap:8px;">
         <textarea id="hdReplyInput" placeholder="메시지를 입력하세요…" rows="2"
           style="resize:none;border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;font-size:13.5px;line-height:1.5;outline:none;font-family:inherit;width:100%;box-sizing:border-box;"
-          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHdReply();}"></textarea>
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing&&event.keyCode!==229){event.preventDefault();sendHdReply();}"></textarea>
         <div style="display:flex;justify-content:flex-end;">
           <button id="hdSendBtn" onclick="sendHdReply()" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;">전송</button>
         </div>
@@ -959,7 +959,7 @@
 <script src="js/admin-dashboard.js?v=20261123f"></script>
 <script src="js/admin-live-sessions.js?v=20261110a"></script>
 <script src="js/admin-live-messages.js?v=20261123b"></script>
-<script src="js/admin-mode.js?v=20261123b"></script>
+<script src="js/admin-mode.js?v=20261123c"></script>
 <script src="js/admin-live.js?v=20261103a"></script>
 <script src="js/admin-modal.js?v=20261102a"></script>
 <script src="js/admin-quote.js?v=20260615a"></script>

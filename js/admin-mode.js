@@ -396,7 +396,7 @@ function initAdminSearch() {
   if (!inp) return;
   inp.addEventListener('input', () => runAdminSearch(inp.value.trim()));
   inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); stepAdminSearch(e.shiftKey ? -1 : 1); }
+    if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); stepAdminSearch(e.shiftKey ? -1 : 1); }
     if (e.key === 'Escape') closeAdminSearch();
   });
   prev?.addEventListener('click', () => stepAdminSearch(-1));
