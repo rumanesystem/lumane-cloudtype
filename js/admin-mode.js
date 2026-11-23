@@ -247,6 +247,8 @@ async function sendAdminMsg() {
   let text     = input?.value.trim() || '';
   const hasPending = !!adminPendingFile;
   if ((!text && !hasPending) || !liveSelectedId || !liveAdminMode) return;
+  // 보내기를 누른 순간의 상담 — 사진 올리는 사이 다른 상담을 골라도 이 상담에만 보냄
+  const targetSessionId = liveSelectedId;
 
   /* 답장 인용 텍스트 앞에 붙이기 */
   if (_adminReplyContent && text) {
@@ -280,7 +282,7 @@ async function sendAdminMsg() {
       const res = await adminFetch(`${SERVER}/api/admin/message`, {
         method: 'POST',
         headers: adminHeaders(),
-        body: JSON.stringify({ sessionId: liveSelectedId, message: msgContent }),
+        body: JSON.stringify({ sessionId: targetSessionId, message: msgContent }),
       });
       if (!res.ok) throw new Error('send');
       showToast('✅ 이미지 전송 완료', 'success');
@@ -291,7 +293,7 @@ async function sendAdminMsg() {
       const res = await adminFetch(`${SERVER}/api/admin/message`, {
         method: 'POST',
         headers: adminHeaders(),
-        body: JSON.stringify({ sessionId: liveSelectedId, message: text }),
+        body: JSON.stringify({ sessionId: targetSessionId, message: text }),
       });
       if (!res.ok) throw new Error('send');
     }

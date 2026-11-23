@@ -965,6 +965,9 @@ async function openHistoryDetail(id) {
   document.getElementById('hdMsgs').innerHTML = '';
   document.getElementById('hdReplyInput').value = '';
   document.getElementById('hdReplyArea').style.display = 'none';
+  // 새 팝업의 전송 버튼은 늘 보통 상태로 (다른 팝업에서 보내는 중이어도)
+  const hdBtn = document.getElementById('hdSendBtn');
+  if (hdBtn) { hdBtn.disabled = false; hdBtn.textContent = '전송'; }
   // 어드민 메모 로드 (백그라운드)
   if (typeof window.hdLoadMemos === 'function') window.hdLoadMemos(id);
   try {
@@ -1018,15 +1021,15 @@ async function openHistoryDetail(id) {
   }
 }
 
-let _hdSending = false;  // 보내는 중엔 Enter·버튼 다시 눌러도 안 보냄
+let _hdSendingFor = null;  // 보내는 중인 팝업(상담 기록 번호) — 같은 팝업에서 Enter·버튼 다시 눌러도 안 보냄
 async function sendHdReply() {
   const input = document.getElementById('hdReplyInput');
   const msg = input.value.trim();
-  if (_hdSending || !msg || !_currentHdSessionId) return;
+  if (!msg || !_currentHdSessionId || (_hdSendingFor != null && _hdSendingFor === _currentHistoryId)) return;
   // 전송을 누른 순간의 상담 — 보내는 사이 팝업을 바꿔도 이 상담에만 보냄
   const sessionId = _currentHdSessionId;
   const historyId = _currentHistoryId;
-  _hdSending = true;
+  _hdSendingFor = historyId;
   const btn = document.getElementById('hdSendBtn');
   btn.disabled = true;
   btn.textContent = '전송 중…';
@@ -1059,9 +1062,9 @@ async function sendHdReply() {
   } catch (err) {
     showToast(`전송 실패: ${err.message}`, 'error');
   } finally {
-    _hdSending = false;
-    btn.disabled = false;
-    btn.textContent = '전송';
+    if (_hdSendingFor === historyId) _hdSendingFor = null;
+    // 버튼은 같은 팝업이 열려 있을 때만 되돌림 (다른 팝업으로 바뀌었으면 그 팝업 버튼은 건드리지 않음)
+    if (_currentHistoryId === historyId) { btn.disabled = false; btn.textContent = '전송'; }
   }
 }
 
