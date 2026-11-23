@@ -16,7 +16,7 @@ const tick = () => new Promise(r => setImmediate(r));
 
 function fakeEl() {
   return { value: '', textContent: '', innerHTML: '', disabled: false, style: {}, dataset: {},
-    focused: 0, focus() { this.focused++; }, insertAdjacentHTML() {}, querySelector() { return null; } };
+    focused: 0, focus() { this.focused++; }, inserted: [], insertAdjacentHTML(_w, html) { this.inserted.push(html); }, querySelector() { return null; } };
 }
 function fakeDocument(ids) {
   const els = Object.fromEntries(ids.map(id => [id, fakeEl()]));
@@ -161,10 +161,17 @@ test('팝업: 답장 보내는 사이 다른 팝업을 열어도 답장은 처�
   const openB = vm.runInContext('openHistoryDetail("102")', context);
   pending[1].d.resolve(conv('102', 'S-B', '손님B'));
   await openB;
+  assert.equal(els.hdSendBtn.disabled, false, 'B 팝업 전송 버튼은 보통 상태로 열림');
+  // B 팝업에서 쓰던 글·버튼 상태 — A 전송이 끝나도 건드리면 안 됨
+  els.hdReplyInput.value = 'B 에 쓰던 글';
+  els.hdSendBtn.disabled = true; els.hdSendBtn.textContent = 'B 상태';
   g.resolve();
   await send;
   assert.deepEqual(posts.map(p => p.body.sessionId), ['S-A', 'S-A']);
-  assert.equal(els.hdSendBtn.disabled, false, 'B 팝업 전송 버튼은 보통 상태');
+  assert.equal(els.hdReplyInput.value, 'B 에 쓰던 글', 'B 입력칸 그대로');
+  assert.deepEqual(els.hdMsgs.inserted, [], 'B 대화창에 A 답장 안 붙임');
+  assert.equal(els.hdSendBtn.disabled, true, 'B 버튼 그대로');
+  assert.equal(els.hdSendBtn.textContent, 'B 상태');
 });
 
 test('팝업: 보내는 중에 Enter 를 또 눌러도 한 번만 보냄', async () => {
@@ -205,6 +212,7 @@ test('관리자 화면: 한글 조합 중 Enter 로는 보내지 않고, 조합 
   assert.deepEqual(handlers.map(h => h.id).sort(), ['hdMemoInput', 'hdReplyInput', 'liveInput', 'lvMemoInput']);
   for (const h of handlers) {
     assert.deepEqual(runHandler(h.code, keyEvent({ isComposing: true, keyCode: 229 })), [], `${h.id}: 크롬 조합 중`);
+    assert.deepEqual(runHandler(h.code, keyEvent({ isComposing: true })), [], `${h.id}: 조합 중 표시만 (키 번호 13)`);
     assert.deepEqual(runHandler(h.code, keyEvent({ keyCode: 229 })), [], `${h.id}: 사파리 조합 확정`);
     assert.equal(runHandler(h.code, keyEvent({})).length, 1, `${h.id}: 보통 Enter`);
     assert.deepEqual(runHandler(h.code, keyEvent({ shiftKey: true })), [], `${h.id}: Shift+Enter 는 줄바꿈`);
@@ -219,6 +227,7 @@ test('손님 화면: 한글 조합 중 Enter 로는 보내지 않음', () => {
   const context = vm.createContext({ $inp, onSend: () => sent.push(1), autoResize() {}, refreshSendBtn() {} });
   vm.runInContext(src, context);
   handler(keyEvent({ isComposing: true, keyCode: 229 }));
+  handler(keyEvent({ isComposing: true }));
   handler(keyEvent({ keyCode: 229 }));
   assert.equal(sent.length, 0);
   handler(keyEvent({}));
@@ -233,7 +242,8 @@ function pressAll(file, re, input, names) {
   const context = vm.createContext({ [input]: target, ...Object.fromEntries(names.map(n => [n, () => calls.push(n)])) });
   vm.runInContext(pick(file, re), context);
   handler(keyEvent({ isComposing: true, keyCode: 229 }));
-  handler(keyEvent({ keyCode: 229 }));
+  handler(keyEvent({ isComposing: true }));   // 조합 중 표시만
+  handler(keyEvent({ keyCode: 229 }));        // 키 번호만 (사파리)
   const composing = calls.length;
   handler(keyEvent({}));
   return { composing, normal: calls.length - composing };
