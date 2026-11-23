@@ -302,8 +302,9 @@ async function sendAdminMsg() {
   } catch {
     showToast('❌ 메시지 전송 실패', 'error');
   } finally {
-    input.disabled = false;
-    input.focus();
+    // 보내는 사이 다른 상담으로 옮겼으면 그 상담 모드에 맞춤 (AI 모드 상담이면 입력칸 끈 채로)
+    input.disabled = !liveAdminMode;
+    if (liveAdminMode && liveSelectedId === targetSessionId) input.focus();
     refreshAdminSendBtn();
   }
 }
