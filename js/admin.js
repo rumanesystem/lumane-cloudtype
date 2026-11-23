@@ -1021,15 +1021,15 @@ async function openHistoryDetail(id) {
   }
 }
 
-let _hdSendingFor = null;  // 보내는 중인 팝업(상담 기록 번호) — 같은 팝업에서 Enter·버튼 다시 눌러도 안 보냄
+const _hdSendingIds = new Set();  // 보내는 중인 팝업들(상담 기록 번호) — 같은 팝업에서 Enter·버튼 다시 눌러도 안 보냄
 async function sendHdReply() {
   const input = document.getElementById('hdReplyInput');
   const msg = input.value.trim();
-  if (!msg || !_currentHdSessionId || (_hdSendingFor != null && _hdSendingFor === _currentHistoryId)) return;
+  if (!msg || !_currentHdSessionId || _hdSendingIds.has(String(_currentHistoryId))) return;
   // 전송을 누른 순간의 상담 — 보내는 사이 팝업을 바꿔도 이 상담에만 보냄
   const sessionId = _currentHdSessionId;
   const historyId = _currentHistoryId;
-  _hdSendingFor = historyId;
+  _hdSendingIds.add(String(historyId));
   const btn = document.getElementById('hdSendBtn');
   btn.disabled = true;
   btn.textContent = '전송 중…';
@@ -1062,7 +1062,7 @@ async function sendHdReply() {
   } catch (err) {
     showToast(`전송 실패: ${err.message}`, 'error');
   } finally {
-    if (_hdSendingFor === historyId) _hdSendingFor = null;
+    _hdSendingIds.delete(String(historyId));
     // 버튼은 같은 팝업이 열려 있을 때만 되돌림 (다른 팝업으로 바뀌었으면 그 팝업 버튼은 건드리지 않음)
     if (_currentHistoryId === historyId) { btn.disabled = false; btn.textContent = '전송'; }
   }
