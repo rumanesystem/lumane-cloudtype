@@ -299,7 +299,7 @@ function renderDashboardSessions(sessions) {
       const pressed = pressKey;
       pressKey = '';
       // 정상 클릭은 click 이벤트가 처리 · 누른 사이 다시 그려져 click 이 안 오는 경우만 여기서 처리
-      if (!key || key !== pressed) return;
+      if (!key || key !== pressed || onControl(e.target)) return;  // 버튼 위에서 뗀 경우도 카드 안 열기
       setTimeout(() => openCard(e, key), 0);
     });
     container.addEventListener('click', e => {
