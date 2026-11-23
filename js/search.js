@@ -39,7 +39,7 @@ export function initSearch() {
 
   inp.addEventListener('input', () => runSearch(inp.value.trim()));
   inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); step(e.shiftKey ? -1 : 1); }
+    if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); step(e.shiftKey ? -1 : 1); }  // 한글 조합 중 Enter 는 글자 확정용
     if (e.key === 'Escape') closeSearch();
   });
   prev?.addEventListener('click', () => step(-1));

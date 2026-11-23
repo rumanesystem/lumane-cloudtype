@@ -225,7 +225,29 @@ test('손님 화면: 한글 조합 중 Enter 로는 보내지 않음', () => {
   assert.equal(sent.length, 1);
 });
 
-test('손님 이름 칸·관리자 검색 칸도 조합 중 Enter 는 무시', () => {
-  assert.match(pick('js/chat.js', /nicknameInput\.addEventListener\('keydown'[^\n]*\n[^\n]*\n/), /isComposing[\s\S]*keyCode !== 229/);
-  assert.match(pick('js/admin-mode.js', /inp\.addEventListener\('keydown'[^\n]*\n[^\n]*\n/), /isComposing[\s\S]*keyCode !== 229/);
+// keydown 등록 한 줄(+본문)을 꺼내 실제로 눌러 본다
+function pressAll(file, re, input, names) {
+  const calls = [];
+  let handler;
+  const target = { addEventListener: (type, fn) => { if (type === 'keydown') handler = fn; } };
+  const context = vm.createContext({ [input]: target, ...Object.fromEntries(names.map(n => [n, () => calls.push(n)])) });
+  vm.runInContext(pick(file, re), context);
+  handler(keyEvent({ isComposing: true, keyCode: 229 }));
+  handler(keyEvent({ keyCode: 229 }));
+  const composing = calls.length;
+  handler(keyEvent({}));
+  return { composing, normal: calls.length - composing };
+}
+
+test('손님 이름 칸·손님 대화 검색·관리자 검색도 조합 중 Enter 는 무시', () => {
+  const cases = [
+    ['js/chat.js', /nicknameInput\.addEventListener\('keydown', e => \{\n[^\n]*\n {2}\}\);/, 'nicknameInput', ['startChatWithNickname']],
+    ['js/search.js', /inp\.addEventListener\('keydown', e => \{\n[\s\S]*?\n {2}\}\);/, 'inp', ['step', 'closeSearch']],
+    ['js/admin-mode.js', /inp\.addEventListener\('keydown', e => \{\n[^\n]*stepAdminSearch[\s\S]*?\n {2}\}\);/, 'inp', ['stepAdminSearch', 'closeAdminSearch']],
+  ];
+  for (const [file, re, input, names] of cases) {
+    const r = pressAll(file, re, input, names);
+    assert.equal(r.composing, 0, `${file}: 조합 중 Enter`);
+    assert.equal(r.normal, 1, `${file}: 보통 Enter`);
+  }
 });
