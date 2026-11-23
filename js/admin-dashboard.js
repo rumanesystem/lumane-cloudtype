@@ -302,6 +302,7 @@ function renderDashboardSessions(sessions) {
       const pressed = pressKey;
       pressKey = '';
       if (onControl(e.target)) pressOk = false;  // 버튼 위에서 떼면 카드 안 열기 (뒤따르는 click 포함)
+      setTimeout(() => { pressOk = null; }, 0);  // 이번 누름 기록은 뒤따르는 click 까지만 (버튼이 click 을 막아도 남지 않게)
       // 정상 클릭은 click 이벤트가 처리 · 누른 사이 다시 그려져 click 이 안 오는 경우만 여기서 처리
       if (!key || key !== pressed || pressOk === false) return;
       setTimeout(() => openCard(e, key), 0);
