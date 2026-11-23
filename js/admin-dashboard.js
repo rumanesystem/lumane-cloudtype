@@ -282,7 +282,8 @@ function renderDashboardSessions(sessions) {
     // 카드 안의 작은 버튼(이름 수정·삭제 등)은 카드 열기에서 뺌 (카드 바깥 조상은 보지 않음)
     const onControl = el => { const c = el && el.closest && el.closest('button,[onclick],a,input'); return !!c && container.contains(c); };
     let pressKey = '';
-    let ignoreClickUntil = 0;  // 버튼 위에서 뗀 직후 카드로 오는 click 무시
+    // 이번 누름이 카드를 열어도 되는지: null = 포인터 없이 온 click(키보드 등) · true = 누름·뗌 모두 카드 위 · false = 한쪽이라도 버튼
+    let pressOk = null;
     let lastOpen = { key: '', at: 0 };
     const openCard = (e, key) => {
       if (!key) return;
@@ -292,22 +293,23 @@ function renderDashboardSessions(sessions) {
       handleCardOpen(e);
     };
     container.addEventListener('pointerdown', e => {
-      if (e.button !== 0 || onControl(e.target)) { pressKey = ''; return; }
+      if (e.button !== 0 || onControl(e.target)) { pressKey = ''; pressOk = false; return; }
       pressKey = cardKey(e.target);
+      pressOk = true;
     });
     container.addEventListener('pointerup', e => {
       const key = cardKey(e.target);
       const pressed = pressKey;
       pressKey = '';
-      // 카드 빈 곳을 누르고 버튼 위에서 떼면 브라우저가 click 을 카드로 보낼 수 있음 → 잠깐 무시
-      if (onControl(e.target)) { ignoreClickUntil = Date.now() + 400; return; }
+      if (onControl(e.target)) pressOk = false;  // 버튼 위에서 떼면 카드 안 열기 (뒤따르는 click 포함)
       // 정상 클릭은 click 이벤트가 처리 · 누른 사이 다시 그려져 click 이 안 오는 경우만 여기서 처리
-      if (!key || key !== pressed || onControl(e.target)) return;  // 버튼 위에서 뗀 경우도 카드 안 열기
+      if (!key || key !== pressed || pressOk === false) return;
       setTimeout(() => openCard(e, key), 0);
     });
     container.addEventListener('click', e => {
-      if (onControl(e.target) || Date.now() < ignoreClickUntil) return;
-      openCard(e, cardKey(e.target));
+      const ok = pressOk !== false && !onControl(e.target);
+      pressOk = null;
+      if (ok) openCard(e, cardKey(e.target));
     });
     function handleCardOpen(e) {
       const sessionCard = e.target.closest('[data-session-id]');
