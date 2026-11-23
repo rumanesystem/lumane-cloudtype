@@ -79,13 +79,18 @@ async function selectLiveSession(sessionId, byClick = false) {
 async function fetchLiveSessionMsgs() {
   if (!liveSelectedId || !serverOnline) return;
   if (typeof document !== 'undefined' && document.hidden) return;
+  const requestedId = liveSelectedId;  // 이 요청을 보낸 상담
   try {
     const res = await adminFetch(
-      `${SERVER}/api/admin/session/${encodeURIComponent(liveSelectedId)}`,
+      `${SERVER}/api/admin/session/${encodeURIComponent(requestedId)}`,
       { headers: adminHeaders() }
     );
     if (!res.ok) return;
     const data = await res.json();
+    // 기다리는 사이 다른 상담(진행 중·저장된 대화)으로 바뀌었으면 늦게 온 답은 버림
+    // (안 버리면 화면은 이전 손님인데 답장은 지금 선택된 손님에게 가는 문제)
+    if (liveSelectedId !== requestedId || _selectedSavedConvId) return;
+    if (data.session && data.session.id != null && String(data.session.id) !== String(requestedId)) return;
     // 실시간으로 열람 중인 세션은 항상 읽음 처리 (카톡처럼 보는 중에는 배지 안 뜸)
     // 사용자가 직접 클릭한 세션만 자동 읽음 (자동 선택은 빨간 NEW 유지)
     if (_liveSelectedByClick) {

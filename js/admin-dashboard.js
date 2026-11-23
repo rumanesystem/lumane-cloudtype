@@ -282,19 +282,28 @@ function renderDashboardSessions(sessions) {
     // 카드 안의 작은 버튼(이름 수정·삭제 등)은 카드 열기에서 뺌 (카드 바깥 조상은 보지 않음)
     const onControl = el => { const c = el && el.closest && el.closest('button,[onclick],a,input'); return !!c && container.contains(c); };
     let pressKey = '';
+    let pressEl = null;   // 누른 카드 요소 — 다시 그려지면 화면에서 빠짐(isConnected=false)
+    let pressSeq = 0;     // 누름 번호 — 같은 누름에서 오는 pointerup 대신 열기 + click 을 한 번으로
     // 이번 누름이 카드를 열어도 되는지: null = 포인터 없이 온 click(키보드 등) · true = 누름·뗌 모두 카드 위 · false = 한쪽이라도 버튼
     let pressOk = null;
-    let lastOpen = { key: '', at: 0 };
-    const openCard = (e, key) => {
+    let lastOpen = { key: '', at: 0, seq: -1 };
+    const openCard = (e, key, seq) => {
       if (!key) return;
       const now = Date.now();
-      if (lastOpen.key === key && now - lastOpen.at < 600) return;
-      lastOpen = { key, at: now };
+      if (seq != null && lastOpen.seq === seq) return;                 // 같은 누름은 한 번만
+      // 빠른 더블 클릭은 한 번으로 — 단 앞에서 연 화면(팝업·대화 탭)을 이미 닫았으면 바로 다시 열림
+      const prevStillShown = lastOpen.key.startsWith('c:')
+        ? document.getElementById('historyDetailOverlay')?.style.display === 'flex'
+        : !!document.getElementById('section-live')?.classList.contains('active');
+      if (lastOpen.key === key && now - lastOpen.at < 600 && prevStillShown) return;
+      lastOpen = { key, at: now, seq: seq == null ? -1 : seq };
       handleCardOpen(e);
     };
     container.addEventListener('pointerdown', e => {
-      if (e.button !== 0 || onControl(e.target)) { pressKey = ''; pressOk = false; return; }
+      pressSeq++;
+      if (e.button !== 0 || onControl(e.target)) { pressKey = ''; pressEl = null; pressOk = false; return; }
       pressKey = cardKey(e.target);
+      pressEl = e.target.closest('[data-session-id],[data-conv-id]');
       pressOk = true;
     });
     container.addEventListener('pointerup', e => {
@@ -305,12 +314,16 @@ function renderDashboardSessions(sessions) {
       setTimeout(() => { pressOk = null; }, 0);  // 이번 누름 기록은 뒤따르는 click 까지만 (버튼이 click 을 막아도 남지 않게)
       // 정상 클릭은 click 이벤트가 처리 · 누른 사이 다시 그려져 click 이 안 오는 경우만 여기서 처리
       if (!key || key !== pressed || pressOk === false) return;
-      setTimeout(() => openCard(e, key), 0);
+      // 누른 카드가 그대로 화면에 있으면 브라우저가 판단(클릭 or 스크롤 직후 터치 무시)하게 둠 — 다시 그려져 사라진 경우만 대신 열기
+      if (pressEl && pressEl.isConnected) return;
+      const seq = pressSeq;
+      setTimeout(() => openCard(e, key, seq), 0);
     });
     container.addEventListener('click', e => {
       const ok = pressOk !== false && !onControl(e.target);
+      const seq = pressOk === null ? null : pressSeq;  // 포인터 없이 온 click(키보드 등)은 누름 번호 없음
       pressOk = null;
-      if (ok) openCard(e, cardKey(e.target));
+      if (ok) openCard(e, cardKey(e.target), seq);
     });
     function handleCardOpen(e) {
       const sessionCard = e.target.closest('[data-session-id]');

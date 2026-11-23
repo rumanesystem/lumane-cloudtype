@@ -971,6 +971,8 @@ async function openHistoryDetail(id) {
     const res = await adminFetch(`${SERVER}/api/admin/conversations/${encodeURIComponent(id)}`, { headers: adminHeaders() });
     if (!res.ok) throw new Error();
     const { conversation: c } = await res.json();
+    // 기다리는 사이 팝업을 닫았거나 다른 상담 팝업을 열었으면 늦게 온 내용은 버림
+    if (_currentHistoryId !== id) return;
     if (c.session_id) {
       _currentHdSessionId = c.session_id;
       document.getElementById('hdReplyArea').style.display = 'flex';
@@ -1012,21 +1014,26 @@ async function openHistoryDetail(id) {
       hdBox.querySelector(`[data-hd-attachment-id="${id}"]`)?.replaceWith(createLiveAttachmentElement(attachment));
     });
   } catch {
-    document.getElementById('hdTitle').textContent = '불러오기 실패';
+    if (_currentHistoryId === id) document.getElementById('hdTitle').textContent = '불러오기 실패';
   }
 }
 
+let _hdSending = false;  // 보내는 중엔 Enter·버튼 다시 눌러도 안 보냄
 async function sendHdReply() {
   const input = document.getElementById('hdReplyInput');
   const msg = input.value.trim();
-  if (!msg || !_currentHdSessionId) return;
+  if (_hdSending || !msg || !_currentHdSessionId) return;
+  // 전송을 누른 순간의 상담 — 보내는 사이 팝업을 바꿔도 이 상담에만 보냄
+  const sessionId = _currentHdSessionId;
+  const historyId = _currentHistoryId;
+  _hdSending = true;
   const btn = document.getElementById('hdSendBtn');
   btn.disabled = true;
   btn.textContent = '전송 중…';
   try {
     const takeoverRes = await adminFetch(`${SERVER}/api/admin/takeover`, {
       method: 'POST', headers: adminHeaders(),
-      body: JSON.stringify({ sessionId: _currentHdSessionId }),
+      body: JSON.stringify({ sessionId }),
     });
     if (!takeoverRes.ok) {
       let errMsg = '이어하기 전환 실패';
@@ -1035,9 +1042,11 @@ async function sendHdReply() {
     }
     const res = await adminFetch(`${SERVER}/api/admin/message`, {
       method: 'POST', headers: adminHeaders(),
-      body: JSON.stringify({ sessionId: _currentHdSessionId, message: msg }),
+      body: JSON.stringify({ sessionId, message: msg }),
     });
     if (!res.ok) throw new Error((await res.json()).error || res.status);
+    // 보낸 뒤 화면 정리는 같은 팝업이 아직 열려 있을 때만 (다른 팝업으로 바뀌었으면 건드리지 않음)
+    if (_currentHistoryId !== historyId) return;
     input.value = '';
     const hdMsgs = document.getElementById('hdMsgs');
     hdMsgs.insertAdjacentHTML('beforeend', `
@@ -1050,6 +1059,7 @@ async function sendHdReply() {
   } catch (err) {
     showToast(`전송 실패: ${err.message}`, 'error');
   } finally {
+    _hdSending = false;
     btn.disabled = false;
     btn.textContent = '전송';
   }
